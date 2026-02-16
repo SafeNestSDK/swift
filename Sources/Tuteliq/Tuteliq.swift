@@ -269,6 +269,7 @@ public final class Tuteliq: @unchecked Sendable {
             riskLevel: riskLevel, riskScore: maxRiskScore, summary: summary,
             bullying: bullyingResult, unsafe: unsafeResult,
             recommendedAction: recommendedAction,
+            creditsUsed: nil,
             externalId: input.externalId, customerId: input.customerId,
             metadata: input.metadata
         )
@@ -599,6 +600,40 @@ public final class Tuteliq: @unchecked Sendable {
         body.append("--\(boundary)--\r\n".data(using: .utf8)!)
 
         return try await multipartRequest(path: "/api/v1/safety/image", body: body, boundary: boundary)
+    }
+
+    // MARK: - Voice Streaming
+
+    /// Create a voice streaming session over WebSocket.
+    ///
+    /// Uses `URLSessionWebSocketTask` — no external dependencies required.
+    ///
+    /// ```swift
+    /// let session = tuteliq.voiceStream(
+    ///     config: VoiceStreamConfig(intervalSeconds: 10, analysisTypes: ["bullying", "unsafe"]),
+    ///     handlers: VoiceStreamHandlers(
+    ///         onTranscription: { print("Transcript:", $0.text) },
+    ///         onAlert: { print("Alert:", $0.category, $0.severity) }
+    ///     )
+    /// )
+    /// try await session.connect()
+    /// try session.sendAudio(audioData)
+    /// let summary = try await session.end()
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - config: Optional session configuration.
+    ///   - handlers: Optional event handler callbacks.
+    /// - Returns: A `VoiceStreamSession`. Call `connect()` to start.
+    public func voiceStream(
+        config: VoiceStreamConfig? = nil,
+        handlers: VoiceStreamHandlers = VoiceStreamHandlers()
+    ) -> VoiceStreamSession {
+        VoiceStreamSession(
+            apiKey: apiKey,
+            config: config,
+            handlers: handlers
+        )
     }
 
     // MARK: - Pricing

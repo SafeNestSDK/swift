@@ -231,6 +231,56 @@ print("Risk: \(report.riskLevel)")
 print("Next Steps: \(report.recommendedNextSteps)")
 ```
 
+### Voice Streaming
+
+Real-time voice streaming with live safety analysis over WebSocket. Uses `URLSessionWebSocketTask` — no external dependencies.
+
+```swift
+let session = tuteliq.voiceStream(
+    config: VoiceStreamConfig(
+        intervalSeconds: 10,
+        analysisTypes: ["bullying", "unsafe"]
+    ),
+    handlers: VoiceStreamHandlers(
+        onTranscription: { print("Transcript: \($0.text)") },
+        onAlert: { print("Alert: \($0.category) (\($0.severity))") }
+    )
+)
+
+try await session.connect()
+
+// Send audio chunks as they arrive
+try session.sendAudio(audioData)
+
+// End session and get summary
+let summary = try await session.end()
+print("Risk: \(summary.overallRisk)")
+print("Score: \(summary.overallRiskScore)")
+print("Full transcript: \(summary.transcript)")
+```
+
+---
+
+## Credits Tracking
+
+Each response includes the number of credits consumed:
+
+```swift
+let result = try await tuteliq.detectBullying(content: "Test message")
+print("Credits used: \(result.creditsUsed ?? 0)")  // 1
+```
+
+| Method | Credits | Notes |
+|--------|---------|-------|
+| `detectBullying()` | 1 | Single text analysis |
+| `detectUnsafe()` | 1 | Single text analysis |
+| `detectGrooming()` | 1 per 10 msgs | `ceil(messages / 10)`, min 1 |
+| `analyzeEmotions()` | 1 per 10 msgs | `ceil(messages / 10)`, min 1 |
+| `getActionPlan()` | 2 | Longer generation |
+| `generateReport()` | 3 | Structured output |
+| `analyzeVoice()` | 5 | Transcription + analysis |
+| `analyzeImage()` | 3 | Vision + OCR + analysis |
+
 ---
 
 ## Tracking Fields

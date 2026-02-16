@@ -100,6 +100,7 @@ public struct BullyingResult: Codable, Sendable {
     public let rationale: String
     public let recommendedAction: String
     public let riskScore: Double
+    public let creditsUsed: Int?
     public let externalId: String?
     public let customerId: String?
     public let metadata: [String: AnyCodable]?
@@ -110,6 +111,7 @@ public struct BullyingResult: Codable, Sendable {
         case confidence, severity, rationale
         case recommendedAction = "recommended_action"
         case riskScore = "risk_score"
+        case creditsUsed = "credits_used"
         case externalId = "external_id"
         case customerId = "customer_id"
         case metadata
@@ -180,6 +182,7 @@ public struct GroomingResult: Codable, Sendable {
     public let rationale: String
     public let riskScore: Double
     public let recommendedAction: String
+    public let creditsUsed: Int?
     public let externalId: String?
     public let customerId: String?
     public let metadata: [String: AnyCodable]?
@@ -189,6 +192,7 @@ public struct GroomingResult: Codable, Sendable {
         case confidence, flags, rationale
         case riskScore = "risk_score"
         case recommendedAction = "recommended_action"
+        case creditsUsed = "credits_used"
         case externalId = "external_id"
         case customerId = "customer_id"
         case metadata
@@ -234,6 +238,7 @@ public struct UnsafeResult: Codable, Sendable {
     public let riskScore: Double
     public let rationale: String
     public let recommendedAction: String
+    public let creditsUsed: Int?
     public let externalId: String?
     public let customerId: String?
     public let metadata: [String: AnyCodable]?
@@ -242,6 +247,7 @@ public struct UnsafeResult: Codable, Sendable {
         case unsafe, categories, severity, confidence, rationale
         case riskScore = "risk_score"
         case recommendedAction = "recommended_action"
+        case creditsUsed = "credits_used"
         case externalId = "external_id"
         case customerId = "customer_id"
         case metadata
@@ -292,6 +298,7 @@ public struct AnalyzeResult: Codable, Sendable {
     public let bullying: BullyingResult?
     public let unsafe: UnsafeResult?
     public let recommendedAction: String
+    public let creditsUsed: Int?
     public let externalId: String?
     public let customerId: String?
     public let metadata: [String: AnyCodable]?
@@ -301,6 +308,7 @@ public struct AnalyzeResult: Codable, Sendable {
         case riskScore = "risk_score"
         case summary, bullying, unsafe
         case recommendedAction = "recommended_action"
+        case creditsUsed = "credits_used"
         case externalId = "external_id"
         case customerId = "customer_id"
         case metadata
@@ -370,6 +378,7 @@ public struct EmotionsResult: Codable, Sendable {
     public let trend: EmotionTrend
     public let summary: String
     public let recommendedFollowup: String
+    public let creditsUsed: Int?
     public let externalId: String?
     public let customerId: String?
     public let metadata: [String: AnyCodable]?
@@ -379,6 +388,7 @@ public struct EmotionsResult: Codable, Sendable {
         case emotionScores = "emotion_scores"
         case trend, summary
         case recommendedFollowup = "recommended_followup"
+        case creditsUsed = "credits_used"
         case externalId = "external_id"
         case customerId = "customer_id"
         case metadata
@@ -429,6 +439,7 @@ public struct ActionPlanResult: Codable, Sendable {
     public let steps: [String]
     public let tone: String
     public let readingLevel: String?
+    public let creditsUsed: Int?
     public let externalId: String?
     public let customerId: String?
     public let metadata: [String: AnyCodable]?
@@ -436,6 +447,7 @@ public struct ActionPlanResult: Codable, Sendable {
     enum CodingKeys: String, CodingKey {
         case audience, steps, tone
         case readingLevel = "approx_reading_level"
+        case creditsUsed = "credits_used"
         case externalId = "external_id"
         case customerId = "customer_id"
         case metadata
@@ -512,6 +524,7 @@ public struct ReportResult: Codable, Sendable {
     public let riskLevel: RiskLevel
     public let categories: [String]
     public let recommendedNextSteps: [String]
+    public let creditsUsed: Int?
     public let externalId: String?
     public let customerId: String?
     public let metadata: [String: AnyCodable]?
@@ -520,6 +533,7 @@ public struct ReportResult: Codable, Sendable {
         case summary, categories
         case riskLevel = "risk_level"
         case recommendedNextSteps = "recommended_next_steps"
+        case creditsUsed = "credits_used"
         case externalId = "external_id"
         case customerId = "customer_id"
         case metadata
@@ -623,6 +637,8 @@ public struct VoiceAnalysisResult: Codable, Sendable {
     public let overallRiskScore: Double
     /// Overall severity level.
     public let overallSeverity: ContentSeverity
+    /// Number of credits consumed by this request.
+    public let creditsUsed: Int?
     /// Echoed external correlation ID.
     public let externalId: String?
     /// Echoed customer ID.
@@ -633,6 +649,7 @@ public struct VoiceAnalysisResult: Codable, Sendable {
         case transcription, analysis
         case overallRiskScore = "overall_risk_score"
         case overallSeverity = "overall_severity"
+        case creditsUsed = "credits_used"
         case externalId = "external_id"
         case customerId = "customer_id"
     }
@@ -733,6 +750,8 @@ public struct ImageAnalysisResult: Codable, Sendable {
     public let overallRiskScore: Double
     /// Overall severity level.
     public let overallSeverity: ContentSeverity
+    /// Number of credits consumed by this request.
+    public let creditsUsed: Int?
     /// Echoed external correlation ID.
     public let externalId: String?
     /// Echoed customer ID.
@@ -744,6 +763,7 @@ public struct ImageAnalysisResult: Codable, Sendable {
         case textAnalysis = "text_analysis"
         case overallRiskScore = "overall_risk_score"
         case overallSeverity = "overall_severity"
+        case creditsUsed = "credits_used"
         case externalId = "external_id"
         case customerId = "customer_id"
     }
