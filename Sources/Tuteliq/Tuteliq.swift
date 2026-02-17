@@ -602,6 +602,98 @@ public final class Tuteliq: @unchecked Sendable {
         return try await multipartRequest(path: "/api/v1/safety/image", body: body, boundary: boundary)
     }
 
+    // MARK: - Fraud Detection
+
+    /// Detect social engineering tactics.
+    public func detectSocialEngineering(_ input: DetectionInput) async throws -> DetectionResult {
+        try await request(method: "POST", path: "/api/v1/fraud/social-engineering", body: buildDetectionRequest(input))
+    }
+
+    /// Detect app-based fraud patterns.
+    public func detectAppFraud(_ input: DetectionInput) async throws -> DetectionResult {
+        try await request(method: "POST", path: "/api/v1/fraud/app-fraud", body: buildDetectionRequest(input))
+    }
+
+    /// Detect romance scam patterns.
+    public func detectRomanceScam(_ input: DetectionInput) async throws -> DetectionResult {
+        try await request(method: "POST", path: "/api/v1/fraud/romance-scam", body: buildDetectionRequest(input))
+    }
+
+    /// Detect money mule recruitment.
+    public func detectMuleRecruitment(_ input: DetectionInput) async throws -> DetectionResult {
+        try await request(method: "POST", path: "/api/v1/fraud/mule-recruitment", body: buildDetectionRequest(input))
+    }
+
+    // MARK: - Safety Extended
+
+    /// Detect gambling harm indicators.
+    public func detectGamblingHarm(_ input: DetectionInput) async throws -> DetectionResult {
+        try await request(method: "POST", path: "/api/v1/safety/gambling-harm", body: buildDetectionRequest(input))
+    }
+
+    /// Detect coercive control patterns.
+    public func detectCoerciveControl(_ input: DetectionInput) async throws -> DetectionResult {
+        try await request(method: "POST", path: "/api/v1/safety/coercive-control", body: buildDetectionRequest(input))
+    }
+
+    /// Detect vulnerability exploitation with cross-endpoint modifier.
+    public func detectVulnerabilityExploitation(_ input: DetectionInput) async throws -> DetectionResult {
+        try await request(method: "POST", path: "/api/v1/safety/vulnerability-exploitation", body: buildDetectionRequest(input))
+    }
+
+    /// Detect radicalisation indicators.
+    public func detectRadicalisation(_ input: DetectionInput) async throws -> DetectionResult {
+        try await request(method: "POST", path: "/api/v1/safety/radicalisation", body: buildDetectionRequest(input))
+    }
+
+    // MARK: - Multi-Endpoint Analysis
+
+    /// Run multiple detection endpoints on a single piece of content.
+    ///
+    /// When vulnerability-exploitation is included, its cross-endpoint modifier
+    /// automatically adjusts severity scores across all other results.
+    public func analyseMulti(_ input: AnalyseMultiInput) async throws -> AnalyseMultiResult {
+        let body = AnalyseMultiRequest(
+            text: input.content,
+            endpoints: input.detections.map(\.rawValue),
+            context: contextPayload(input.context),
+            options: input.includeEvidence ? AnalyseMultiOptions(includeEvidence: true) : nil,
+            externalId: input.externalId,
+            customerId: input.customerId,
+            metadata: input.metadata
+        )
+        return try await request(method: "POST", path: "/api/v1/analyse/multi", body: body)
+    }
+
+    // MARK: - Video Analysis
+
+    /// Analyze video content for safety concerns.
+    ///
+    /// Extracts frames and analyzes them for harmful visual content.
+    /// Supported formats: mp4, webm, quicktime, x-msvideo.
+    public func analyzeVideo(_ input: AnalyzeVideoInput) async throws -> VideoAnalysisResult {
+        let boundary = "Boundary-\(UUID().uuidString)"
+        var body = Data()
+
+        let mimeType = Self.mimeType(for: input.filename) ?? "application/octet-stream"
+        body.appendMultipart(boundary: boundary, name: "file", filename: input.filename, mimeType: mimeType, data: input.file)
+
+        if let v = input.fileId { body.appendMultipartField(boundary: boundary, name: "file_id", value: v) }
+        if let v = input.externalId { body.appendMultipartField(boundary: boundary, name: "external_id", value: v) }
+        if let v = input.customerId { body.appendMultipartField(boundary: boundary, name: "customer_id", value: v) }
+        if let v = input.ageGroup { body.appendMultipartField(boundary: boundary, name: "age_group", value: v) }
+        body.appendMultipartField(boundary: boundary, name: "platform", value: Self.resolvePlatform(input.platform))
+        if let metadata = input.metadata,
+           let jsonData = try? JSONSerialization.data(withJSONObject: metadata),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            body.appendMultipartField(boundary: boundary, name: "metadata", value: jsonString)
+        }
+
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+
+        return try await multipartRequest(path: "/api/v1/safety/video", body: body, boundary: boundary)
+    }
+
     // MARK: - Voice Streaming
 
     /// Create a voice streaming session over WebSocket.
@@ -803,6 +895,17 @@ public final class Tuteliq: @unchecked Sendable {
             ageGroup: context?.ageGroup,
             relationship: context?.relationship,
             platform: Self.resolvePlatform(context?.platform)
+        )
+    }
+
+    private func buildDetectionRequest(_ input: DetectionInput) -> DetectionRequest {
+        DetectionRequest(
+            text: input.content,
+            context: contextPayload(input.context),
+            includeEvidence: input.includeEvidence ? true : nil,
+            externalId: input.externalId,
+            customerId: input.customerId,
+            metadata: input.metadata
         )
     }
 
@@ -1146,6 +1249,8 @@ public final class Tuteliq: @unchecked Sendable {
         case "jpg", "jpeg": return "image/jpeg"
         case "gif": return "image/gif"
         case "webp": return "image/webp"
+        case "mov": return "video/quicktime"
+        case "avi": return "video/x-msvideo"
         default: return nil
         }
     }

@@ -111,6 +111,31 @@ struct PolicyUpdateRequest: Encodable {
     let config: [String: AnyCodable]
 }
 
+/// Fraud/Extended detection request body.
+struct DetectionRequest: Encodable {
+    let text: String
+    var context: ContextPayload?
+    var includeEvidence: Bool?
+    var externalId: String?
+    var customerId: String?
+    var metadata: [String: AnyCodable]?
+}
+
+/// Multi-endpoint analysis request body.
+struct AnalyseMultiRequest: Encodable {
+    let text: String
+    let endpoints: [String]
+    var context: ContextPayload?
+    var options: AnalyseMultiOptions?
+    var externalId: String?
+    var customerId: String?
+    var metadata: [String: AnyCodable]?
+}
+
+struct AnalyseMultiOptions: Encodable {
+    var includeEvidence: Bool?
+}
+
 /// Context payload shared across analysis requests.
 struct ContextPayload: Encodable {
     var language: String?

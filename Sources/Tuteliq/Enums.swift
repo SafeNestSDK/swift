@@ -101,3 +101,39 @@ public enum WebhookEventType: String, Codable, Sendable {
     case selfHarmDetected = "self_harm.detected"
     case bullyingSevere = "bullying.severe"
 }
+
+/// Supported language codes for content analysis.
+/// English is stable; all others are beta.
+public enum Language: String, Codable, Sendable, CaseIterable {
+    case en, es, pt, uk, sv, no, da, fi, de, fr
+}
+
+/// Language support maturity status.
+public enum LanguageStatus: String, Codable, Sendable {
+    case stable
+    case beta
+}
+
+/// Detection endpoint identifiers for multi-endpoint analysis.
+public enum Detection: String, Codable, Sendable {
+    case bullying
+    case grooming
+    case unsafe
+    case socialEngineering = "social-engineering"
+    case appFraud = "app-fraud"
+    case romanceScam = "romance-scam"
+    case muleRecruitment = "mule-recruitment"
+    case gamblingHarm = "gambling-harm"
+    case coerciveControl = "coercive-control"
+    case vulnerabilityExploitation = "vulnerability-exploitation"
+    case radicalisation
+}
+
+/// Subscription tier levels.
+public enum Tier: String, Codable, Sendable {
+    case starter
+    case indie
+    case pro
+    case business
+    case enterprise
+}

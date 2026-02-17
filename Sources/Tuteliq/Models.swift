@@ -100,6 +100,8 @@ public struct BullyingResult: Codable, Sendable {
     public let rationale: String
     public let recommendedAction: String
     public let riskScore: Double
+    public let language: String?
+    public let languageStatus: String?
     public let creditsUsed: Int?
     public let externalId: String?
     public let customerId: String?
@@ -111,6 +113,8 @@ public struct BullyingResult: Codable, Sendable {
         case confidence, severity, rationale
         case recommendedAction = "recommended_action"
         case riskScore = "risk_score"
+        case language
+        case languageStatus = "language_status"
         case creditsUsed = "credits_used"
         case externalId = "external_id"
         case customerId = "customer_id"
@@ -181,6 +185,8 @@ public struct GroomingResult: Codable, Sendable {
     public let flags: [String]
     public let rationale: String
     public let riskScore: Double
+    public let language: String?
+    public let languageStatus: String?
     public let recommendedAction: String
     public let creditsUsed: Int?
     public let externalId: String?
@@ -191,6 +197,8 @@ public struct GroomingResult: Codable, Sendable {
         case groomingRisk = "grooming_risk"
         case confidence, flags, rationale
         case riskScore = "risk_score"
+        case language
+        case languageStatus = "language_status"
         case recommendedAction = "recommended_action"
         case creditsUsed = "credits_used"
         case externalId = "external_id"
@@ -238,6 +246,8 @@ public struct UnsafeResult: Codable, Sendable {
     public let riskScore: Double
     public let rationale: String
     public let recommendedAction: String
+    public let language: String?
+    public let languageStatus: String?
     public let creditsUsed: Int?
     public let externalId: String?
     public let customerId: String?
@@ -247,6 +257,8 @@ public struct UnsafeResult: Codable, Sendable {
         case unsafe, categories, severity, confidence, rationale
         case riskScore = "risk_score"
         case recommendedAction = "recommended_action"
+        case language
+        case languageStatus = "language_status"
         case creditsUsed = "credits_used"
         case externalId = "external_id"
         case customerId = "customer_id"
@@ -766,6 +778,255 @@ public struct ImageAnalysisResult: Codable, Sendable {
         case creditsUsed = "credits_used"
         case externalId = "external_id"
         case customerId = "customer_id"
+    }
+}
+
+// MARK: - Unified Detection (Fraud + Safety Extended)
+
+/// Input for all fraud detection and safety-extended endpoints.
+public struct DetectionInput: Sendable {
+    /// Text content to analyze.
+    public var content: String
+    /// Optional analysis context.
+    public var context: AnalysisContext?
+    /// Include evidence excerpts in the response.
+    public var includeEvidence: Bool
+    /// Your external correlation ID.
+    public var externalId: String?
+    /// Multi-tenant customer ID.
+    public var customerId: String?
+    /// Arbitrary key-value metadata.
+    public var metadata: [String: AnyCodable]?
+
+    public init(
+        content: String,
+        context: AnalysisContext? = nil,
+        includeEvidence: Bool = false,
+        externalId: String? = nil,
+        customerId: String? = nil,
+        metadata: [String: Any]? = nil
+    ) {
+        self.content = content
+        self.context = context
+        self.includeEvidence = includeEvidence
+        self.externalId = externalId
+        self.customerId = customerId
+        self.metadata = metadata?.mapValues { AnyCodable($0) }
+    }
+}
+
+/// A detected category with tag and confidence.
+public struct DetectionCategory: Codable, Sendable {
+    public let tag: String
+    public let label: String
+    public let confidence: Double
+}
+
+/// Evidence excerpt from the analyzed content.
+public struct DetectionEvidence: Codable, Sendable {
+    public let text: String
+    public let tactic: String
+    public let weight: Double
+}
+
+/// Age calibration details applied to risk scoring.
+public struct AgeCalibration: Codable, Sendable {
+    public let applied: Bool
+    public let ageGroup: String?
+    public let multiplier: Double?
+
+    enum CodingKeys: String, CodingKey {
+        case applied
+        case ageGroup = "age_group"
+        case multiplier
+    }
+}
+
+/// Unified result from fraud detection and safety-extended endpoints.
+public struct DetectionResult: Codable, Sendable {
+    public let endpoint: String
+    public let detected: Bool
+    public let severity: Double
+    public let confidence: Double
+    public let riskScore: Double
+    public let level: String
+    public let categories: [DetectionCategory]
+    public let recommendedAction: String
+    public let rationale: String
+    public let language: String
+    public let languageStatus: LanguageStatus
+    public let evidence: [DetectionEvidence]?
+    public let ageCalibration: AgeCalibration?
+    public let creditsUsed: Int?
+    public let processingTimeMs: Double?
+    public let externalId: String?
+    public let customerId: String?
+    public let metadata: [String: AnyCodable]?
+
+    enum CodingKeys: String, CodingKey {
+        case endpoint, detected, severity, confidence, categories, rationale, language, evidence, metadata
+        case riskScore = "risk_score"
+        case level
+        case recommendedAction = "recommended_action"
+        case languageStatus = "language_status"
+        case ageCalibration = "age_calibration"
+        case creditsUsed = "credits_used"
+        case processingTimeMs = "processing_time_ms"
+        case externalId = "external_id"
+        case customerId = "customer_id"
+    }
+}
+
+// MARK: - Multi-Endpoint Analysis
+
+/// Input for multi-endpoint analysis.
+public struct AnalyseMultiInput: Sendable {
+    /// Text content to analyze.
+    public var content: String
+    /// Detection endpoints to run (max 10).
+    public var detections: [Detection]
+    /// Optional analysis context.
+    public var context: AnalysisContext?
+    /// Include evidence in individual results.
+    public var includeEvidence: Bool
+    /// Your external correlation ID.
+    public var externalId: String?
+    /// Multi-tenant customer ID.
+    public var customerId: String?
+    /// Arbitrary key-value metadata.
+    public var metadata: [String: AnyCodable]?
+
+    public init(
+        content: String,
+        detections: [Detection],
+        context: AnalysisContext? = nil,
+        includeEvidence: Bool = false,
+        externalId: String? = nil,
+        customerId: String? = nil,
+        metadata: [String: Any]? = nil
+    ) {
+        self.content = content
+        self.detections = detections
+        self.context = context
+        self.includeEvidence = includeEvidence
+        self.externalId = externalId
+        self.customerId = customerId
+        self.metadata = metadata?.mapValues { AnyCodable($0) }
+    }
+}
+
+/// Summary of multi-endpoint analysis results.
+public struct AnalyseMultiSummary: Codable, Sendable {
+    public let totalEndpoints: Int
+    public let detectedCount: Int
+    public let highestRisk: [String: AnyCodable]
+    public let overallRiskLevel: String
+
+    enum CodingKeys: String, CodingKey {
+        case totalEndpoints = "total_endpoints"
+        case detectedCount = "detected_count"
+        case highestRisk = "highest_risk"
+        case overallRiskLevel = "overall_risk_level"
+    }
+}
+
+/// Result from multi-endpoint analysis.
+public struct AnalyseMultiResult: Codable, Sendable {
+    public let results: [DetectionResult]
+    public let summary: AnalyseMultiSummary
+    public let crossEndpointModifier: Double?
+    public let creditsUsed: Int?
+    public let externalId: String?
+    public let customerId: String?
+    public let metadata: [String: AnyCodable]?
+
+    enum CodingKeys: String, CodingKey {
+        case results, summary, metadata
+        case crossEndpointModifier = "cross_endpoint_modifier"
+        case creditsUsed = "credits_used"
+        case externalId = "external_id"
+        case customerId = "customer_id"
+    }
+}
+
+// MARK: - Video Analysis
+
+/// A safety finding from a video frame.
+public struct VideoSafetyFinding: Codable, Sendable {
+    public let frameIndex: Int
+    public let timestamp: Double
+    public let description: String
+    public let categories: [String]
+    public let severity: Double
+
+    enum CodingKeys: String, CodingKey {
+        case frameIndex = "frame_index"
+        case timestamp, description, categories, severity
+    }
+}
+
+/// Input for video analysis.
+public struct AnalyzeVideoInput: Sendable {
+    /// Raw video file data.
+    public var file: Data
+    /// Filename with extension (used for MIME type detection).
+    public var filename: String
+    /// Customer-provided file reference echoed in the response.
+    public var fileId: String?
+    /// Age group range.
+    public var ageGroup: String?
+    /// Platform where the content originated.
+    public var platform: String?
+    /// Your external correlation ID.
+    public var externalId: String?
+    /// Multi-tenant customer ID.
+    public var customerId: String?
+    /// Arbitrary key-value metadata.
+    public var metadata: [String: String]?
+
+    public init(
+        file: Data,
+        filename: String,
+        fileId: String? = nil,
+        ageGroup: String? = nil,
+        platform: String? = nil,
+        externalId: String? = nil,
+        customerId: String? = nil,
+        metadata: [String: String]? = nil
+    ) {
+        self.file = file
+        self.filename = filename
+        self.fileId = fileId
+        self.ageGroup = ageGroup
+        self.platform = platform
+        self.externalId = externalId
+        self.customerId = customerId
+        self.metadata = metadata
+    }
+}
+
+/// Result from video analysis.
+public struct VideoAnalysisResult: Codable, Sendable {
+    public let fileId: String?
+    public let framesAnalyzed: Int
+    public let safetyFindings: [VideoSafetyFinding]
+    public let overallRiskScore: Double
+    public let overallSeverity: ContentSeverity
+    public let creditsUsed: Int?
+    public let externalId: String?
+    public let customerId: String?
+    public let metadata: [String: AnyCodable]?
+
+    enum CodingKeys: String, CodingKey {
+        case fileId = "file_id"
+        case framesAnalyzed = "frames_analyzed"
+        case safetyFindings = "safety_findings"
+        case overallRiskScore = "overall_risk_score"
+        case overallSeverity = "overall_severity"
+        case creditsUsed = "credits_used"
+        case externalId = "external_id"
+        case customerId = "customer_id"
+        case metadata
     }
 }
 
