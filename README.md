@@ -17,8 +17,9 @@
 </p>
 
 <p align="center">
-  <a href="https://api.tuteliq.ai/docs">API Docs</a> •
-  <a href="https://tuteliq.app">Dashboard</a> •
+  <a href="https://docs.tuteliq.ai">API Docs</a> •
+  <a href="https://tuteliq.ai">Dashboard</a> •
+  <a href="https://trust.tuteliq.ai">Trust</a> •
   <a href="https://discord.gg/7kbTeRYRXD">Discord</a>
 </p>
 
@@ -437,7 +438,7 @@ Enable `PII_REDACTION_ENABLED=true` on your Tuteliq API to automatically strip e
 
 ## Support
 
-- **API Docs**: [api.tuteliq.ai/docs](https://api.tuteliq.ai/docs)
+- **API Docs**: [docs.tuteliq.ai](https://docs.tuteliq.ai)
 - **Discord**: [discord.gg/7kbTeRYRXD](https://discord.gg/7kbTeRYRXD)
 - **Email**: support@tuteliq.ai
 - **Issues**: [GitHub Issues](https://github.com/Tuteliq/swift/issues)
@@ -447,6 +448,26 @@ Enable `PII_REDACTION_ENABLED=true` on your Tuteliq API to automatically strip e
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+## Get Certified — Free
+
+Tuteliq offers a **free certification program** for anyone who wants to deepen their understanding of online child safety. Complete a track, pass the quiz, and earn your official Tuteliq certificate — verified and shareable.
+
+**Three tracks available:**
+
+| Track | Who it's for | Duration |
+|-------|-------------|----------|
+| **Parents & Caregivers** | Parents, guardians, grandparents, teachers, coaches | ~90 min |
+| **Young People (10–16)** | Young people who want to learn to spot manipulation | ~60 min |
+| **Companies & Platforms** | Product managers, trust & safety teams, CTOs, compliance officers | ~120 min |
+
+**Start here →** [tuteliq.ai/certify](https://tuteliq.ai/certify)
+
+- 100% Free — no login required
+- Verifiable certificate on completion
+- Covers grooming recognition, sextortion, cyberbullying, regulatory obligations (KOSA, EU DSA), and more
 
 ---
 
