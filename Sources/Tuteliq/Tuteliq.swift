@@ -19,7 +19,6 @@ import Foundation
 /// across tasks and actors. Metadata properties (`usage`, `lastRequestId`,
 /// `lastLatency`, `rateLimitInfo`) reflect the most recently completed request.
 public final class Tuteliq: @unchecked Sendable {
-
     // MARK: - Properties
 
     private let apiKey: String
@@ -238,9 +237,9 @@ public final class Tuteliq: @unchecked Sendable {
         let riskLevel: RiskLevel
         switch maxRiskScore {
         case 0.9...: riskLevel = .critical
-        case 0.7..<0.9: riskLevel = .high
-        case 0.5..<0.7: riskLevel = .medium
-        case 0.3..<0.5: riskLevel = .low
+        case 0.7 ..< 0.9: riskLevel = .high
+        case 0.5 ..< 0.7: riskLevel = .medium
+        case 0.3 ..< 0.5: riskLevel = .low
         default: riskLevel = .safe
         }
 
@@ -553,7 +552,8 @@ public final class Tuteliq: @unchecked Sendable {
         if let v = input.childAge { body.appendMultipartField(boundary: boundary, name: "child_age", value: "\(v)") }
         if let metadata = input.metadata,
            let jsonData = try? JSONSerialization.data(withJSONObject: metadata),
-           let jsonString = String(data: jsonData, encoding: .utf8) {
+           let jsonString = String(data: jsonData, encoding: .utf8)
+        {
             body.appendMultipartField(boundary: boundary, name: "metadata", value: jsonString)
         }
 
@@ -593,7 +593,8 @@ public final class Tuteliq: @unchecked Sendable {
         body.appendMultipartField(boundary: boundary, name: "platform", value: Self.resolvePlatform(input.platform))
         if let metadata = input.metadata,
            let jsonData = try? JSONSerialization.data(withJSONObject: metadata),
-           let jsonString = String(data: jsonData, encoding: .utf8) {
+           let jsonString = String(data: jsonData, encoding: .utf8)
+        {
             body.appendMultipartField(boundary: boundary, name: "metadata", value: jsonString)
         }
 
@@ -685,7 +686,8 @@ public final class Tuteliq: @unchecked Sendable {
         body.appendMultipartField(boundary: boundary, name: "platform", value: Self.resolvePlatform(input.platform))
         if let metadata = input.metadata,
            let jsonData = try? JSONSerialization.data(withJSONObject: metadata),
-           let jsonString = String(data: jsonData, encoding: .utf8) {
+           let jsonString = String(data: jsonData, encoding: .utf8)
+        {
             body.appendMultipartField(boundary: boundary, name: "metadata", value: jsonString)
         }
 
@@ -922,7 +924,8 @@ public final class Tuteliq: @unchecked Sendable {
            let remainingStr = httpResponse.value(forHTTPHeaderField: "X-RateLimit-Remaining"),
            let remaining = Int(remainingStr),
            let resetStr = httpResponse.value(forHTTPHeaderField: "X-RateLimit-Reset"),
-           let reset = TimeInterval(resetStr) {
+           let reset = TimeInterval(resetStr)
+        {
             _rateLimitInfo = RateLimitInfo(limit: limit, remaining: remaining, reset: reset)
         }
 
@@ -931,7 +934,8 @@ public final class Tuteliq: @unchecked Sendable {
            let usedStr = httpResponse.value(forHTTPHeaderField: "X-Monthly-Used"),
            let used = Int(usedStr),
            let remainingStr = httpResponse.value(forHTTPHeaderField: "X-Monthly-Remaining"),
-           let remaining = Int(remainingStr) {
+           let remaining = Int(remainingStr)
+        {
             _usage = Usage(
                 limit: limit, used: used, remaining: remaining,
                 reset: httpResponse.value(forHTTPHeaderField: "X-Monthly-Reset"),
@@ -955,12 +959,12 @@ public final class Tuteliq: @unchecked Sendable {
 
     private func encodeBatchItem(_ item: BatchItem) -> BatchItemPayload {
         switch item {
-        case .bullying(let id, let text, let context):
+        case let .bullying(id, text, context):
             return BatchItemPayload(
                 id: id, type: "bullying",
                 data: BatchItemData(text: text, context: contextPayload(context))
             )
-        case .grooming(let id, let messages, let context):
+        case let .grooming(id, messages, context):
             return BatchItemPayload(
                 id: id, type: "grooming",
                 data: BatchItemData(
@@ -968,12 +972,12 @@ public final class Tuteliq: @unchecked Sendable {
                     context: context.map(contextPayload)
                 )
             )
-        case .unsafe(let id, let text, let context):
+        case let .unsafe (id, text, context):
             return BatchItemPayload(
                 id: id, type: "unsafe",
                 data: BatchItemData(text: text, context: contextPayload(context))
             )
-        case .emotions(let id, let messages, let context):
+        case let .emotions(id, messages, context):
             return BatchItemPayload(
                 id: id, type: "emotions",
                 data: BatchItemData(
@@ -996,7 +1000,7 @@ public final class Tuteliq: @unchecked Sendable {
         return try await requestRetrying(method: method, path: path, bodyData: bodyData, query: query)
     }
 
-    // Overload for GET/DELETE with no body
+    /// Overload for GET/DELETE with no body
     private func request<T: Decodable>(
         method: String,
         path: String,
@@ -1005,7 +1009,7 @@ public final class Tuteliq: @unchecked Sendable {
         try await requestRetrying(method: method, path: path, bodyData: nil, query: query)
     }
 
-    // Overload for pre-encoded body data
+    /// Overload for pre-encoded body data
     private func request<T: Decodable>(
         method: String,
         path: String,
@@ -1030,7 +1034,7 @@ public final class Tuteliq: @unchecked Sendable {
 
         var lastError: Error?
 
-        for attempt in 0..<maxRetries {
+        for attempt in 0 ..< maxRetries {
             try Task.checkCancellation()
 
             do {
@@ -1111,7 +1115,7 @@ public final class Tuteliq: @unchecked Sendable {
 
         updateMetadata(from: httpResponse, latency: Date().timeIntervalSince(startTime))
 
-        guard (200..<300).contains(httpResponse.statusCode) else {
+        guard (200 ..< 300).contains(httpResponse.statusCode) else {
             let errorResponse = try? decoder.decode(APIErrorResponse.self, from: data)
             let message = errorResponse?.error.message ?? "Request failed"
 
@@ -1145,7 +1149,7 @@ public final class Tuteliq: @unchecked Sendable {
     ) async throws -> T {
         var lastError: Error?
 
-        for attempt in 0..<maxRetries {
+        for attempt in 0 ..< maxRetries {
             try Task.checkCancellation()
 
             do {
@@ -1210,7 +1214,7 @@ public final class Tuteliq: @unchecked Sendable {
 
         updateMetadata(from: httpResponse, latency: Date().timeIntervalSince(startTime))
 
-        guard (200..<300).contains(httpResponse.statusCode) else {
+        guard (200 ..< 300).contains(httpResponse.statusCode) else {
             let errorResponse = try? decoder.decode(APIErrorResponse.self, from: data)
             let message = errorResponse?.error.message ?? "Request failed"
 

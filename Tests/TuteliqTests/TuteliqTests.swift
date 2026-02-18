@@ -1,13 +1,18 @@
-import XCTest
 @testable import Tuteliq
+import XCTest
 
 // MARK: - Mock URLProtocol
 
 final class MockURLProtocol: URLProtocol {
     static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data))?
 
-    override class func canInit(with request: URLRequest) -> Bool { true }
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override class func canInit(with _: URLRequest) -> Bool {
+        true
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        request
+    }
 
     override func startLoading() {
         guard let handler = MockURLProtocol.requestHandler else {
@@ -71,7 +76,6 @@ extension TuteliqTests {
 // MARK: - Tests
 
 final class TuteliqTests: XCTestCase {
-
     // MARK: - Initialization
 
     func testInitialization() throws {
@@ -92,7 +96,7 @@ final class TuteliqTests: XCTestCase {
 
     func testInitializationThrowsOnEmptyKey() {
         XCTAssertThrowsError(try Tuteliq(apiKey: "")) { error in
-            guard case TuteliqError.validationError(let msg, _) = error else {
+            guard case let TuteliqError.validationError(msg, _) = error else {
                 XCTFail("Expected validationError, got \(error)")
                 return
             }
@@ -102,7 +106,7 @@ final class TuteliqTests: XCTestCase {
 
     func testInitializationThrowsOnShortKey() {
         XCTAssertThrowsError(try Tuteliq(apiKey: "short")) { error in
-            guard case TuteliqError.validationError(let msg, _) = error else {
+            guard case let TuteliqError.validationError(msg, _) = error else {
                 XCTFail("Expected validationError, got \(error)")
                 return
             }
@@ -195,7 +199,7 @@ final class TuteliqTests: XCTestCase {
 
     func testBatchItem() {
         let item = BatchItem.bullying(id: "1", text: "test")
-        if case .bullying(let id, let text, _) = item {
+        if case let .bullying(id, text, _) = item {
             XCTAssertEqual(id, "1")
             XCTAssertEqual(text, "test")
         } else {
@@ -222,7 +226,7 @@ final class TuteliqTests: XCTestCase {
             "double": AnyCodable(3.14),
             "bool": AnyCodable(true),
             "array": AnyCodable([1, 2, 3]),
-            "dict": AnyCodable(["nested": "value"])
+            "dict": AnyCodable(["nested": "value"]),
         ]
 
         let data = try JSONEncoder().encode(original)
@@ -252,7 +256,7 @@ final class TuteliqTests: XCTestCase {
             "recommended_action": "flag_for_moderator",
             "risk_score": 0.82,
             "external_id": "msg_123",
-            "customer_id": "cust_456"
+            "customer_id": "cust_456",
         ]
         let data = jsonData(json)
         let result = try JSONDecoder().decode(BullyingResult.self, from: data)
@@ -274,7 +278,7 @@ final class TuteliqTests: XCTestCase {
             "flags": ["age_inappropriate", "isolation_attempt"],
             "rationale": "Detected grooming tactics",
             "risk_score": 0.88,
-            "recommended_action": "immediate_intervention"
+            "recommended_action": "immediate_intervention",
         ]
         let data = jsonData(json)
         let result = try JSONDecoder().decode(GroomingResult.self, from: data)
@@ -292,7 +296,7 @@ final class TuteliqTests: XCTestCase {
             "confidence": 0.95,
             "risk_score": 0.93,
             "rationale": "Contains self-harm references",
-            "recommended_action": "immediate_intervention"
+            "recommended_action": "immediate_intervention",
         ]
         let data = jsonData(json)
         let result = try JSONDecoder().decode(UnsafeResult.self, from: data)
@@ -308,7 +312,7 @@ final class TuteliqTests: XCTestCase {
             "emotion_scores": ["sadness": 0.8, "anxiety": 0.6, "anger": 0.2],
             "trend": "worsening",
             "summary": "Child appears distressed",
-            "recommended_followup": "Consider professional support"
+            "recommended_followup": "Consider professional support",
         ]
         let data = jsonData(json)
         let result = try JSONDecoder().decode(EmotionsResult.self, from: data)
@@ -323,7 +327,7 @@ final class TuteliqTests: XCTestCase {
             "audience": "parent",
             "steps": ["Step 1", "Step 2"],
             "tone": "supportive",
-            "approx_reading_level": "adult"
+            "approx_reading_level": "adult",
         ]
         let data = jsonData(json)
         let result = try JSONDecoder().decode(ActionPlanResult.self, from: data)
@@ -338,12 +342,12 @@ final class TuteliqTests: XCTestCase {
             "summary": "Incident summary",
             "risk_level": "high",
             "categories": ["bullying"],
-            "recommended_next_steps": ["Contact school", "Monitor child"]
+            "recommended_next_steps": ["Contact school", "Monitor child"],
         ]
         let data = jsonData(json)
         let result = try JSONDecoder().decode(ReportResult.self, from: data)
 
-        XCTAssertEqual(result.riskLevel, "high")
+        XCTAssertEqual(result.riskLevel, .high)
         XCTAssertEqual(result.recommendedNextSteps.count, 2)
     }
 
@@ -378,7 +382,7 @@ final class TuteliqTests: XCTestCase {
                 "severity": "low",
                 "rationale": "No bullying detected",
                 "recommended_action": "none",
-                "risk_score": 0.05
+                "risk_score": 0.05,
             ], headers: [
                 "X-Request-ID": "req_abc123",
                 "X-RateLimit-Limit": "1000",
@@ -387,7 +391,7 @@ final class TuteliqTests: XCTestCase {
                 "X-Monthly-Limit": "50000",
                 "X-Monthly-Used": "100",
                 "X-Monthly-Remaining": "49900",
-                "X-Monthly-Reset": "2026-03-01"
+                "X-Monthly-Reset": "2026-03-01",
             ])
         }
 
@@ -410,8 +414,8 @@ final class TuteliqTests: XCTestCase {
             self.mockResponse(statusCode: 401, json: [
                 "error": [
                     "code": "AUTH_1002",
-                    "message": "API key invalid"
-                ]
+                    "message": "API key invalid",
+                ],
             ])
         }
 
@@ -419,7 +423,7 @@ final class TuteliqTests: XCTestCase {
             _ = try await client.detectBullying(content: "test")
             XCTFail("Should have thrown")
         } catch let error as TuteliqError {
-            guard case .authenticationError(let msg) = error else {
+            guard case let .authenticationError(msg) = error else {
                 XCTFail("Expected authenticationError, got \(error)")
                 return
             }
@@ -432,8 +436,8 @@ final class TuteliqTests: XCTestCase {
             self.mockResponse(statusCode: 403, json: [
                 "error": [
                     "code": "SUB_7006",
-                    "message": "Endpoint not available in your plan"
-                ]
+                    "message": "Endpoint not available in your plan",
+                ],
             ])
         }
 
@@ -441,7 +445,7 @@ final class TuteliqTests: XCTestCase {
             _ = try await client.analyzeEmotions(content: "test")
             XCTFail("Should have thrown")
         } catch let error as TuteliqError {
-            guard case .subscriptionError(let msg, let code) = error else {
+            guard case let .subscriptionError(msg, code) = error else {
                 XCTFail("Expected subscriptionError, got \(error)")
                 return
             }
@@ -455,8 +459,8 @@ final class TuteliqTests: XCTestCase {
             self.mockResponse(statusCode: 429, json: [
                 "error": [
                     "code": "RATE_2001",
-                    "message": "Rate limit exceeded"
-                ]
+                    "message": "Rate limit exceeded",
+                ],
             ])
         }
 
@@ -477,8 +481,8 @@ final class TuteliqTests: XCTestCase {
                 "error": [
                     "code": "VAL_3001",
                     "message": "Validation failed",
-                    "details": ["field": "text", "reason": "required"]
-                ]
+                    "details": ["field": "text", "reason": "required"],
+                ],
             ])
         }
 
@@ -486,7 +490,7 @@ final class TuteliqTests: XCTestCase {
             _ = try await client.detectBullying(content: "test")
             XCTFail("Should have thrown")
         } catch let error as TuteliqError {
-            guard case .validationError(_, let details) = error else {
+            guard case let .validationError(_, details) = error else {
                 XCTFail("Expected validationError, got \(error)")
                 return
             }
@@ -499,8 +503,8 @@ final class TuteliqTests: XCTestCase {
             self.mockResponse(statusCode: 500, json: [
                 "error": [
                     "code": "SVC_4001",
-                    "message": "Internal server error"
-                ]
+                    "message": "Internal server error",
+                ],
             ])
         }
 
@@ -508,7 +512,7 @@ final class TuteliqTests: XCTestCase {
             _ = try await client.detectBullying(content: "test")
             XCTFail("Should have thrown")
         } catch let error as TuteliqError {
-            guard case .serverError(_, let statusCode) = error else {
+            guard case let .serverError(_, statusCode) = error else {
                 XCTFail("Expected serverError, got \(error)")
                 return
             }
@@ -527,7 +531,7 @@ final class TuteliqTests: XCTestCase {
                 "severity": "low",
                 "rationale": "OK",
                 "recommended_action": "none",
-                "risk_score": 0.0
+                "risk_score": 0.0,
             ])
         }
 
@@ -566,7 +570,7 @@ final class TuteliqTests: XCTestCase {
                 "severity": "low",
                 "rationale": "OK",
                 "recommended_action": "none",
-                "risk_score": 0.0
+                "risk_score": 0.0,
             ])
         }
 
@@ -593,12 +597,12 @@ final class TuteliqTests: XCTestCase {
                 "severity": "low",
                 "rationale": "OK",
                 "recommended_action": "none",
-                "risk_score": 0.0
+                "risk_score": 0.0,
             ], headers: [
                 "X-Monthly-Limit": "1000",
                 "X-Monthly-Used": "850",
                 "X-Monthly-Remaining": "150",
-                "X-Usage-Warning": "85% of monthly limit used"
+                "X-Usage-Warning": "85% of monthly limit used",
             ])
         }
 
@@ -615,7 +619,7 @@ final class TuteliqTests: XCTestCase {
         let client = try makeClient(cacheTTL: 60) { _ in
             callCount += 1
             return self.mockResponse(json: [
-                "plans": [] as [[String: Any]]
+                "plans": [] as [[String: Any]],
             ])
         }
 
@@ -628,12 +632,12 @@ final class TuteliqTests: XCTestCase {
 
     // MARK: - Cancellation Test
 
-    func testCancelledTaskThrows() async {
-        let client = try! makeClient(maxRetries: 1) { _ in
+    func testCancelledTaskThrows() async throws {
+        let client = try makeClient(maxRetries: 1) { _ in
             self.mockResponse(json: [
                 "is_bullying": false, "bullying_type": [] as [String],
                 "confidence": 0.1, "severity": "low", "rationale": "OK",
-                "recommended_action": "none", "risk_score": 0.0
+                "recommended_action": "none", "risk_score": 0.0,
             ])
         }
 
@@ -647,7 +651,7 @@ final class TuteliqTests: XCTestCase {
         switch result {
         case .success:
             break // May succeed if cancellation check is too late; that's acceptable
-        case .failure(let error):
+        case let .failure(error):
             XCTAssertTrue(error is CancellationError, "Expected CancellationError, got \(error)")
         }
     }
@@ -659,13 +663,12 @@ final class TuteliqTests: XCTestCase {
             "risk_level": "high",
             "risk_score": 0.85,
             "summary": "Concerns detected",
-            "recommended_action": "flag_for_moderator"
+            "recommended_action": "flag_for_moderator",
         ]
         let data = jsonData(json)
         let result = try JSONDecoder().decode(AnalyzeResult.self, from: data)
 
-        XCTAssertEqual(result.riskLevel, "high")
-        XCTAssertEqual(result.riskLevelValue, .high)
+        XCTAssertEqual(result.riskLevel, .high)
     }
 
     func testReportResultRiskLevelValue() throws {
@@ -673,13 +676,12 @@ final class TuteliqTests: XCTestCase {
             "summary": "Report",
             "risk_level": "critical",
             "categories": ["bullying"],
-            "recommended_next_steps": ["Act now"]
+            "recommended_next_steps": ["Act now"],
         ]
         let data = jsonData(json)
         let result = try JSONDecoder().decode(ReportResult.self, from: data)
 
-        XCTAssertEqual(result.riskLevel, "critical")
-        XCTAssertEqual(result.riskLevelValue, .critical)
+        XCTAssertEqual(result.riskLevel, .critical)
     }
 
     // MARK: - Encodable Request Body Test
@@ -705,7 +707,7 @@ final class TuteliqTests: XCTestCase {
             return self.mockResponse(json: [
                 "is_bullying": false, "bullying_type": [] as [String],
                 "confidence": 0.1, "severity": "low", "rationale": "OK",
-                "recommended_action": "none", "risk_score": 0.0
+                "recommended_action": "none", "risk_score": 0.0,
             ])
         }
 

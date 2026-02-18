@@ -51,15 +51,15 @@ public enum TuteliqError: Error, LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-        case .authenticationError(let msg): return "Authentication Error: \(msg)"
-        case .rateLimitError(let msg): return "Rate Limit Error: \(msg)"
-        case .validationError(let msg, _): return "Validation Error: \(msg)"
-        case .notFoundError(let msg): return "Not Found: \(msg)"
-        case .subscriptionError(let msg, _): return "Subscription Error: \(msg)"
-        case .serverError(let msg, let code): return "Server Error (\(code)): \(msg)"
-        case .timeoutError(let msg): return "Timeout: \(msg)"
-        case .networkError(let msg): return "Network Error: \(msg)"
-        case .unknownError(let msg): return "Error: \(msg)"
+        case let .authenticationError(msg): return "Authentication Error: \(msg)"
+        case let .rateLimitError(msg): return "Rate Limit Error: \(msg)"
+        case let .validationError(msg, _): return "Validation Error: \(msg)"
+        case let .notFoundError(msg): return "Not Found: \(msg)"
+        case let .subscriptionError(msg, _): return "Subscription Error: \(msg)"
+        case let .serverError(msg, code): return "Server Error (\(code)): \(msg)"
+        case let .timeoutError(msg): return "Timeout: \(msg)"
+        case let .networkError(msg): return "Network Error: \(msg)"
+        case let .unknownError(msg): return "Error: \(msg)"
         }
     }
 }

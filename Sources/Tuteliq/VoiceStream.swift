@@ -30,8 +30,8 @@ public struct VoiceReadyEvent: Sendable {
     public let config: [String: Any]
 
     init(data: [String: Any]) {
-        self.sessionId = data["session_id"] as? String ?? ""
-        self.config = data["config"] as? [String: Any] ?? [:]
+        sessionId = data["session_id"] as? String ?? ""
+        config = data["config"] as? [String: Any] ?? [:]
     }
 }
 
@@ -49,10 +49,10 @@ public struct VoiceTranscriptionEvent: Sendable {
     public let flushIndex: Int
 
     init(data: [String: Any]) {
-        self.text = data["text"] as? String ?? ""
-        self.flushIndex = data["flush_index"] as? Int ?? 0
+        text = data["text"] as? String ?? ""
+        flushIndex = data["flush_index"] as? Int ?? 0
         let rawSegments = data["segments"] as? [[String: Any]] ?? []
-        self.segments = rawSegments.map {
+        segments = rawSegments.map {
             VoiceTranscriptionSegment(
                 start: $0["start"] as? Double ?? 0,
                 end: $0["end"] as? Double ?? 0,
@@ -71,11 +71,11 @@ public struct VoiceAlertEvent: Sendable {
     public let flushIndex: Int
 
     init(data: [String: Any]) {
-        self.category = data["category"] as? String ?? ""
-        self.severity = data["severity"] as? String ?? ""
-        self.riskScore = data["risk_score"] as? Double ?? 0
-        self.details = data["details"] as? [String: Any] ?? [:]
-        self.flushIndex = data["flush_index"] as? Int ?? 0
+        category = data["category"] as? String ?? ""
+        severity = data["severity"] as? String ?? ""
+        riskScore = data["risk_score"] as? Double ?? 0
+        details = data["details"] as? [String: Any] ?? [:]
+        flushIndex = data["flush_index"] as? Int ?? 0
     }
 }
 
@@ -89,12 +89,12 @@ public struct VoiceSessionSummaryEvent: Sendable {
     public let transcript: String
 
     init(data: [String: Any]) {
-        self.sessionId = data["session_id"] as? String ?? ""
-        self.durationSeconds = data["duration_seconds"] as? Double ?? 0
-        self.overallRisk = data["overall_risk"] as? String ?? ""
-        self.overallRiskScore = data["overall_risk_score"] as? Double ?? 0
-        self.totalFlushes = data["total_flushes"] as? Int ?? 0
-        self.transcript = data["transcript"] as? String ?? ""
+        sessionId = data["session_id"] as? String ?? ""
+        durationSeconds = data["duration_seconds"] as? Double ?? 0
+        overallRisk = data["overall_risk"] as? String ?? ""
+        overallRiskScore = data["overall_risk_score"] as? Double ?? 0
+        totalFlushes = data["total_flushes"] as? Int ?? 0
+        transcript = data["transcript"] as? String ?? ""
     }
 }
 
@@ -103,7 +103,7 @@ public struct VoiceConfigUpdatedEvent: Sendable {
     public let config: [String: Any]
 
     init(data: [String: Any]) {
-        self.config = data["config"] as? [String: Any] ?? [:]
+        config = data["config"] as? [String: Any] ?? [:]
     }
 }
 
@@ -113,8 +113,8 @@ public struct VoiceErrorEvent: Sendable {
     public let message: String
 
     init(data: [String: Any]) {
-        self.code = data["code"] as? String ?? ""
-        self.message = data["message"] as? String ?? ""
+        code = data["code"] as? String ?? ""
+        message = data["message"] as? String ?? ""
     }
 }
 
@@ -221,8 +221,8 @@ public final class VoiceStreamSession: @unchecked Sendable {
 
         let urlSession = URLSession(configuration: .default)
         let ws = urlSession.webSocketTask(with: request)
-        self.session = urlSession
-        self.webSocket = ws
+        session = urlSession
+        webSocket = ws
         ws.resume()
 
         lock.lock()
@@ -314,7 +314,7 @@ public final class VoiceStreamSession: @unchecked Sendable {
             guard let self = self else { return }
 
             switch result {
-            case .success(let message):
+            case let .success(message):
                 self.handleMessage(message)
                 self.listenForMessages()
 
@@ -337,9 +337,9 @@ public final class VoiceStreamSession: @unchecked Sendable {
     private func handleMessage(_ message: URLSessionWebSocketTask.Message) {
         let text: String
         switch message {
-        case .string(let str):
+        case let .string(str):
             text = str
-        case .data(let data):
+        case let .data(data):
             text = String(data: data, encoding: .utf8) ?? ""
         @unknown default:
             return

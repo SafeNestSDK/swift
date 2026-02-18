@@ -1,6 +1,7 @@
 import Foundation
 
 // MARK: - Internal Encodable Request Types
+
 //
 // These types use JSONEncoder with .convertToSnakeCase, so property names
 // are camelCase here and automatically become snake_case in the JSON output.

@@ -24,7 +24,7 @@ public struct PolicyResult: Codable, Sendable {
 public enum BatchItem: Sendable {
     case bullying(id: String, text: String, context: AnalysisContext? = nil)
     case grooming(id: String, messages: [GroomingMessage], context: AnalysisContext? = nil)
-    case unsafe(id: String, text: String, context: AnalysisContext? = nil)
+    case unsafe (id: String, text: String, context: AnalysisContext? = nil)
     case emotions(id: String, messages: [EmotionMessage], context: AnalysisContext? = nil)
 }
 
@@ -71,7 +71,7 @@ public struct BatchResultItem: Codable, Sendable {
     /// ```
     /// - Parameter type: The `Decodable` type to decode the result as.
     /// - Returns: The decoded result, or `nil` if the result is absent.
-    public func decodeResult<T: Decodable>(as type: T.Type) throws -> T? {
+    public func decodeResult<T: Decodable>(as _: T.Type) throws -> T? {
         guard let result = result else { return nil }
         guard JSONSerialization.isValidJSONObject(result.value) else { return nil }
         let data = try JSONSerialization.data(withJSONObject: result.value)
@@ -513,16 +513,16 @@ public struct AccountExportResult: Codable, Sendable {
 /// Types of consent.
 public enum ConsentType: String, Codable, Sendable {
     case dataProcessing = "data_processing"
-    case analytics = "analytics"
-    case marketing = "marketing"
+    case analytics
+    case marketing
     case thirdPartySharing = "third_party_sharing"
     case childSafetyMonitoring = "child_safety_monitoring"
 }
 
 /// Consent status values.
 public enum ConsentStatus: String, Codable, Sendable {
-    case granted = "granted"
-    case withdrawn = "withdrawn"
+    case granted
+    case withdrawn
 }
 
 /// Input for recording consent.
@@ -635,27 +635,27 @@ public struct AuditLogsResult: Codable, Sendable {
 
 /// Breach severity levels.
 public enum BreachSeverity: String, Codable, Sendable {
-    case low = "low"
-    case medium = "medium"
-    case high = "high"
-    case critical = "critical"
+    case low
+    case medium
+    case high
+    case critical
 }
 
 /// Breach status values.
 public enum BreachStatus: String, Codable, Sendable {
-    case detected = "detected"
-    case investigating = "investigating"
-    case contained = "contained"
-    case reported = "reported"
-    case resolved = "resolved"
+    case detected
+    case investigating
+    case contained
+    case reported
+    case resolved
 }
 
 /// Breach notification status values.
 public enum BreachNotificationStatus: String, Codable, Sendable {
-    case pending = "pending"
+    case pending
     case usersNotified = "users_notified"
     case dpaNotified = "dpa_notified"
-    case completed = "completed"
+    case completed
 }
 
 /// Input for logging a new data breach.
