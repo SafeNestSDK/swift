@@ -110,6 +110,13 @@ let result = try await tuteliq.detectGrooming(
 if result.groomingRisk == .high {
     print("Flags: \(result.flags)")  // ["secrecy", "isolation"]
 }
+
+// Per-message breakdown (optional, returned on conversation-aware endpoints)
+if let analysis = result.messageAnalysis {
+    for m in analysis {
+        print("Message \(m.messageIndex): risk=\(m.riskScore), flags=\(m.flags), summary=\(m.summary)")
+    }
+}
 ```
 
 ### Unsafe Content Detection

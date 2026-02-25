@@ -185,9 +185,10 @@ public struct GroomingResult: Codable, Sendable {
     public let flags: [String]
     public let rationale: String
     public let riskScore: Double
+    public let recommendedAction: String
+    public let messageAnalysis: [MessageAnalysis]?
     public let language: String?
     public let languageStatus: String?
-    public let recommendedAction: String
     public let creditsUsed: Int?
     public let externalId: String?
     public let customerId: String?
@@ -197,9 +198,10 @@ public struct GroomingResult: Codable, Sendable {
         case groomingRisk = "grooming_risk"
         case confidence, flags, rationale
         case riskScore = "risk_score"
+        case recommendedAction = "recommended_action"
+        case messageAnalysis = "message_analysis"
         case language
         case languageStatus = "language_status"
-        case recommendedAction = "recommended_action"
         case creditsUsed = "credits_used"
         case externalId = "external_id"
         case customerId = "customer_id"
@@ -815,6 +817,24 @@ public struct DetectionInput: Sendable {
     }
 }
 
+/// Per-message analysis from conversation-aware detection.
+public struct MessageAnalysis: Codable, Sendable {
+    /// Index of the message in the input array.
+    public let messageIndex: Int
+    /// Risk score for this specific message (0.0–1.0).
+    public let riskScore: Double
+    /// Flags identified in this message.
+    public let flags: [String]
+    /// Brief summary of the message analysis.
+    public let summary: String
+
+    enum CodingKeys: String, CodingKey {
+        case messageIndex = "message_index"
+        case riskScore = "risk_score"
+        case flags, summary
+    }
+}
+
 /// A detected category with tag and confidence.
 public struct DetectionCategory: Codable, Sendable {
     public let tag: String
@@ -857,6 +877,7 @@ public struct DetectionResult: Codable, Sendable {
     public let languageStatus: LanguageStatus
     public let evidence: [DetectionEvidence]?
     public let ageCalibration: AgeCalibration?
+    public let messageAnalysis: [MessageAnalysis]?
     public let creditsUsed: Int?
     public let processingTimeMs: Double?
     public let externalId: String?
@@ -870,6 +891,7 @@ public struct DetectionResult: Codable, Sendable {
         case recommendedAction = "recommended_action"
         case languageStatus = "language_status"
         case ageCalibration = "age_calibration"
+        case messageAnalysis = "message_analysis"
         case creditsUsed = "credits_used"
         case processingTimeMs = "processing_time_ms"
         case externalId = "external_id"
