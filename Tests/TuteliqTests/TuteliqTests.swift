@@ -723,4 +723,98 @@ final class TuteliqTests: XCTestCase {
         XCTAssertNotNil(capturedBody?["customer_id"], "Should use snake_case key 'customer_id'")
         XCTAssertNil(capturedBody?["externalId"], "Should NOT have camelCase key")
     }
+
+    // MARK: - Keychain Storage
+
+    #if canImport(Security)
+        func testKeychainSaveRetrieveDelete() throws {
+            let service = "ai.tuteliq.test.\(UUID().uuidString)"
+            let testKey = "test-keychain-api-key-12345"
+
+            // Save
+            try KeychainStore.save(apiKey: testKey, service: service)
+
+            // Retrieve
+            let retrieved = KeychainStore.retrieve(service: service)
+            XCTAssertEqual(retrieved, testKey)
+
+            // Delete
+            try KeychainStore.delete(service: service)
+
+            // Verify deleted
+            let afterDelete = KeychainStore.retrieve(service: service)
+            XCTAssertNil(afterDelete)
+        }
+
+        func testKeychainSaveUpdatesExistingKey() throws {
+            let service = "ai.tuteliq.test.\(UUID().uuidString)"
+            defer { try? KeychainStore.delete(service: service) }
+
+            try KeychainStore.save(apiKey: "original-key-12345", service: service)
+            try KeychainStore.save(apiKey: "updated-key-12345", service: service)
+
+            let retrieved = KeychainStore.retrieve(service: service)
+            XCTAssertEqual(retrieved, "updated-key-12345")
+        }
+
+        func testKeychainRetrieveReturnsNilWhenEmpty() {
+            let service = "ai.tuteliq.test.\(UUID().uuidString)"
+            XCTAssertNil(KeychainStore.retrieve(service: service))
+        }
+
+        func testKeychainDeleteNonExistentKeyDoesNotThrow() throws {
+            let service = "ai.tuteliq.test.\(UUID().uuidString)"
+            XCTAssertNoThrow(try KeychainStore.delete(service: service))
+        }
+
+        func testStoreAPIKeyPublicAPI() throws {
+            let service = "ai.tuteliq.test.\(UUID().uuidString)"
+            defer { try? Tuteliq.removeAPIKey(service: service) }
+
+            try Tuteliq.storeAPIKey("public-api-test-key-12345", service: service)
+
+            let retrieved = KeychainStore.retrieve(service: service)
+            XCTAssertEqual(retrieved, "public-api-test-key-12345")
+        }
+
+        func testRemoveAPIKeyPublicAPI() throws {
+            let service = "ai.tuteliq.test.\(UUID().uuidString)"
+
+            try Tuteliq.storeAPIKey("key-to-remove-12345", service: service)
+            try Tuteliq.removeAPIKey(service: service)
+
+            XCTAssertNil(KeychainStore.retrieve(service: service))
+        }
+
+        func testWithStoredAPIKeyThrowsWhenNoKey() {
+            let service = "ai.tuteliq.test.\(UUID().uuidString)"
+            XCTAssertThrowsError(try Tuteliq.withStoredAPIKey(service: service)) { error in
+                guard case let TuteliqError.validationError(msg, _) = error else {
+                    XCTFail("Expected validationError, got \(error)")
+                    return
+                }
+                XCTAssertTrue(msg.contains("No API key found"))
+            }
+        }
+
+        func testWithStoredAPIKeyCreatesClient() throws {
+            let service = "ai.tuteliq.test.\(UUID().uuidString)"
+            defer { try? Tuteliq.removeAPIKey(service: service) }
+
+            try Tuteliq.storeAPIKey("stored-api-key-12345", service: service)
+            let client = try Tuteliq.withStoredAPIKey(service: service)
+            XCTAssertNotNil(client)
+        }
+        func testConfigureFromBundleKeyThrowsWhenMissing() {
+            XCTAssertThrowsError(
+                try Tuteliq.configure(fromBundleKey: "NonExistentKey_\(UUID().uuidString)")
+            ) { error in
+                guard case let TuteliqError.validationError(msg, _) = error else {
+                    XCTFail("Expected validationError, got \(error)")
+                    return
+                }
+                XCTAssertTrue(msg.contains("No API key found in Info.plist"))
+            }
+        }
+    #endif
 }

@@ -49,7 +49,11 @@ https://github.com/Tuteliq/swift.git
 ```swift
 import Tuteliq
 
-let tuteliq = Tuteliq(apiKey: "your-api-key")
+// At app launch — reads TuteliqAPIKey from Info.plist and stores it in the Keychain
+try Tuteliq.configure()
+
+// Anywhere in your app — creates a client from the Keychain-stored key
+let tuteliq = try Tuteliq.withStoredAPIKey()
 
 // Quick safety analysis
 let result = try await tuteliq.analyze(content: "Message to check")
@@ -59,6 +63,8 @@ if result.riskLevel != .safe {
     print("Summary: \(result.summary)")
 }
 ```
+
+> See [Security Best Practices](#security-best-practices) for the recommended `.xcconfig` setup.
 
 ---
 
@@ -367,7 +373,8 @@ struct ContentView: View {
     @State private var warning: String?
     @State private var isChecking = false
 
-    let tuteliq = Tuteliq(apiKey: ProcessInfo.processInfo.environment["TUTELIQ_API_KEY"] ?? "")
+    // Uses the API key stored in the Keychain (see Security Best Practices)
+    let tuteliq = try Tuteliq.withStoredAPIKey()
 
     var body: some View {
         VStack {
@@ -440,6 +447,64 @@ The **grooming** method already accepts a `messages` array and analyzes the full
 ### PII Redaction
 
 Enable `PII_REDACTION_ENABLED=true` on your Tuteliq API to automatically strip emails, phone numbers, URLs, social handles, IPs, and other PII from detection summaries and webhook payloads. The original text is still analyzed in full — only stored outputs are scrubbed.
+
+---
+
+## Security Best Practices
+
+**Never hardcode API keys** in your Swift source files. Strings embedded in the binary can be extracted with tools like `strings` — even from release builds. Instead, use the `.xcconfig` → Keychain flow described below.
+
+### Recommended Setup
+
+#### 1. Create a `Secrets.xcconfig` file (git-ignored)
+
+```
+// Secrets.xcconfig — DO NOT commit this file
+TUTELIQ_API_KEY = sk_live_your_key_here
+```
+
+Add it to `.gitignore`:
+
+```
+Secrets.xcconfig
+```
+
+#### 2. Reference it in `Info.plist`
+
+```xml
+<key>TuteliqAPIKey</key>
+<string>$(TUTELIQ_API_KEY)</string>
+```
+
+#### 3. Configure at app launch
+
+```swift
+// AppDelegate or @main App init
+try Tuteliq.configure()  // reads TuteliqAPIKey from Info.plist → Keychain
+```
+
+#### 4. Use the stored key everywhere
+
+```swift
+let client = try Tuteliq.withStoredAPIKey()
+let result = try await client.analyze(content: message)
+```
+
+### Quick Reference
+
+```swift
+// Store a key manually
+try Tuteliq.storeAPIKey("sk_live_...")
+
+// Read from Info.plist and store in Keychain
+try Tuteliq.configure()
+
+// Create a client from the stored key
+let client = try Tuteliq.withStoredAPIKey()
+
+// Remove the key from the Keychain (e.g. on logout)
+try Tuteliq.removeAPIKey()
+```
 
 ---
 

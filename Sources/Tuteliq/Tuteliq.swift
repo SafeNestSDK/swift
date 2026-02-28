@@ -877,6 +877,112 @@ public final class Tuteliq: @unchecked Sendable {
         return try await request(method: "PATCH", path: "/api/v1/admin/breach/\(id)", body: body)
     }
 
+    // MARK: - Secure API Key Storage (Keychain)
+
+    #if canImport(Security)
+        /// Store an API key securely in the system Keychain.
+        ///
+        /// Use this method at first launch or after the user enters their key,
+        /// then create clients with ``withStoredAPIKey(service:baseURL:timeout:maxRetries:retryDelay:cacheTTL:session:)``.
+        ///
+        /// ```swift
+        /// // Store once (e.g. after onboarding)
+        /// try Tuteliq.storeAPIKey("sk_live_abc123...")
+        ///
+        /// // Later, create a client from the stored key
+        /// let tuteliq = try Tuteliq.withStoredAPIKey()
+        /// ```
+        ///
+        /// - Parameters:
+        ///   - apiKey: The Tuteliq API key to store.
+        ///   - service: Keychain service identifier (default: `ai.tuteliq.api-key`).
+        /// - Throws: ``TuteliqError/validationError(_:details:)`` if the Keychain operation fails.
+        public static func storeAPIKey(_ apiKey: String, service: String = "ai.tuteliq.api-key") throws {
+            try KeychainStore.save(apiKey: apiKey, service: service)
+        }
+
+        /// Remove the stored API key from the system Keychain.
+        ///
+        /// - Parameter service: Keychain service identifier (default: `ai.tuteliq.api-key`).
+        /// - Throws: ``TuteliqError/validationError(_:details:)`` if the Keychain operation fails.
+        public static func removeAPIKey(service: String = "ai.tuteliq.api-key") throws {
+            try KeychainStore.delete(service: service)
+        }
+
+        /// Read the API key from `Bundle.main.infoDictionary` and store it in the Keychain.
+        ///
+        /// This is the recommended way to bootstrap your API key at app launch.
+        /// Set the key in an `.xcconfig` file (git-ignored) and reference it in
+        /// `Info.plist` — then call this method once on startup:
+        ///
+        /// ```swift
+        /// try Tuteliq.configure()  // reads TuteliqAPIKey from Info.plist → Keychain
+        /// let client = try Tuteliq.withStoredAPIKey()
+        /// ```
+        ///
+        /// - Parameters:
+        ///   - bundleKey: The key to look up in `Bundle.main.infoDictionary` (default: `"TuteliqAPIKey"`).
+        ///   - service: Keychain service identifier (default: `"ai.tuteliq.api-key"`).
+        /// - Throws: ``TuteliqError/validationError(_:details:)`` if the key is missing from the bundle
+        ///   or cannot be stored in the Keychain.
+        public static func configure(
+            fromBundleKey bundleKey: String = "TuteliqAPIKey",
+            service: String = "ai.tuteliq.api-key"
+        ) throws {
+            guard let apiKey = Bundle.main.infoDictionary?[bundleKey] as? String,
+                  !apiKey.isEmpty
+            else {
+                throw TuteliqError.validationError(
+                    "No API key found in Info.plist for key \"\(bundleKey)\". "
+                        + "Add it via an .xcconfig file or set it directly in your target's Info.plist."
+                )
+            }
+            try KeychainStore.save(apiKey: apiKey, service: service)
+        }
+
+        /// Create a Tuteliq client using an API key stored in the Keychain.
+        ///
+        /// ```swift
+        /// let tuteliq = try Tuteliq.withStoredAPIKey()
+        /// let result = try await tuteliq.detectBullying(content: "hello")
+        /// ```
+        ///
+        /// - Parameters:
+        ///   - service: Keychain service identifier (default: `ai.tuteliq.api-key`).
+        ///   - baseURL: Custom API base URL (defaults to `https://api.tuteliq.ai`).
+        ///   - timeout: Request timeout in seconds (default: 30).
+        ///   - maxRetries: Number of retry attempts for transient failures (default: 3).
+        ///   - retryDelay: Initial retry delay in seconds, doubled each attempt (default: 1).
+        ///   - cacheTTL: Time-to-live for GET response cache in seconds (default: 0 = disabled).
+        ///   - session: Custom `URLSession` for advanced configuration or testing.
+        /// - Returns: A configured ``Tuteliq`` client.
+        /// - Throws: ``TuteliqError/validationError(_:details:)`` if no key is found or it is invalid.
+        public static func withStoredAPIKey(
+            service: String = "ai.tuteliq.api-key",
+            baseURL: String = "https://api.tuteliq.ai",
+            timeout: TimeInterval = 30,
+            maxRetries: Int = 3,
+            retryDelay: TimeInterval = 1,
+            cacheTTL: TimeInterval = 0,
+            session: URLSession? = nil
+        ) throws -> Tuteliq {
+            guard let apiKey = KeychainStore.retrieve(service: service) else {
+                throw TuteliqError.validationError(
+                    "No API key found in Keychain. Call Tuteliq.storeAPIKey(_:) first."
+                )
+            }
+            return try Tuteliq(
+                apiKey: apiKey,
+                baseURL: baseURL,
+                timeout: timeout,
+                maxRetries: maxRetries,
+                retryDelay: retryDelay,
+                cacheTTL: cacheTTL,
+                session: session
+            )
+        }
+    #endif
+
     // MARK: - Private Helpers
 
     private static let sdkIdentifier = "Swift SDK"
