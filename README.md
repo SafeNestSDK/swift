@@ -245,6 +245,41 @@ print("Risk: \(report.riskLevel)")
 print("Next Steps: \(report.recommendedNextSteps)")
 ```
 
+### Age Verification (Beta)
+
+> **Pro tier ($99/mo)+ required** — 5 credits per request — `POST /v1/verification/age`
+
+```swift
+let ageResult = try await tuteliq.verifyAge(
+    document: Data(contentsOf: URL(fileURLWithPath: "id-front.jpg")),
+    selfie: Data(contentsOf: URL(fileURLWithPath: "selfie.jpg")),
+    method: .combined // .document | .biometric | .combined
+)
+
+print(ageResult.verified)       // true
+print(ageResult.estimatedAge)   // 15
+print(ageResult.ageRange)       // "13-15"
+print(ageResult.isMinor)        // true
+print(ageResult.confidence)     // 0.97
+```
+
+### Identity Verification (Beta)
+
+> **Business tier ($349/mo)+ required** — 10 credits per request — `POST /v1/verification/identity`
+
+```swift
+let identityResult = try await tuteliq.verifyIdentity(
+    document: Data(contentsOf: URL(fileURLWithPath: "id-front.jpg")),
+    selfie: Data(contentsOf: URL(fileURLWithPath: "selfie.jpg"))
+)
+
+print(identityResult.verified)               // true
+print(identityResult.matchScore)             // 0.98
+print(identityResult.livenessPassed)         // true
+print(identityResult.documentAuthenticated)  // true
+print(identityResult.isMinor)               // false
+```
+
 ### Voice Streaming
 
 Real-time voice streaming with live safety analysis over WebSocket. Uses `URLSessionWebSocketTask` — no external dependencies.
@@ -294,6 +329,8 @@ print("Credits used: \(result.creditsUsed ?? 0)")  // 1
 | `generateReport()` | 3 | Structured output |
 | `analyzeVoice()` | 5 | Transcription + analysis |
 | `analyzeImage()` | 3 | Vision + OCR + analysis |
+| `verifyAge()` | 5 | Age verification (Beta, Pro+) |
+| `verifyIdentity()` | 10 | Identity verification (Beta, Business+) |
 
 ---
 

@@ -20,6 +20,8 @@ let result = try await client.detectUnsafe(text: "content to check", ageGroup: "
 - All 20+ Tuteliq API endpoints
 - 16+ detection categories (KOSA compliant)
 - Age group calibration
+- Age verification (Beta) — POST /v1/verification/age — 5 credits, Pro tier+
+- Identity verification (Beta) — POST /v1/verification/identity — 10 credits, Business tier+
 - Swift Package Manager
 
 ## Links
