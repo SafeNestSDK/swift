@@ -1052,6 +1052,167 @@ public struct VideoAnalysisResult: Codable, Sendable {
     }
 }
 
+// MARK: - Verification
+
+/// Input for creating a verification session.
+public struct CreateVerificationSessionInput: Sendable {
+    /// Verification mode (age or identity).
+    public var mode: VerificationMode
+    /// Document type to verify.
+    public var documentType: DocumentType?
+
+    public init(mode: VerificationMode, documentType: DocumentType? = nil) {
+        self.mode = mode
+        self.documentType = documentType
+    }
+}
+
+/// Verification session details.
+public struct VerificationSession: Codable, Sendable {
+    public let sessionId: String
+    /// URL to redirect the user for verification (mapped from API `mobile_url`).
+    public let url: String
+    public let expiresAt: String
+    public let mode: VerificationMode
+    public let verificationMode: String?
+
+    enum CodingKeys: String, CodingKey {
+        case sessionId = "session_id"
+        case url = "mobile_url"
+        case expiresAt = "expires_at"
+        case mode
+        case verificationMode = "verification_mode"
+    }
+}
+
+/// Face match result from verification.
+public struct FaceMatchResult: Codable, Sendable {
+    public let matched: Bool
+    public let confidence: Double
+    public let distance: Double?
+}
+
+/// Liveness check result from verification.
+public struct LivenessResult: Codable, Sendable {
+    public let valid: Bool
+    public let reason: String?
+}
+
+/// Result of age verification.
+public struct AgeVerificationResult: Codable, Sendable {
+    public let verificationId: String
+    public let status: VerificationStatus
+    public let ageBracket: String?
+    public let isMinor: Bool?
+    public let liveness: LivenessResult?
+    public let faceMatch: FaceMatchResult?
+    public let failureReasons: [String]?
+    public let creditsUsed: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case verificationId = "verification_id"
+        case status
+        case ageBracket = "age_bracket"
+        case isMinor = "is_minor"
+        case liveness
+        case faceMatch = "face_match"
+        case failureReasons = "failure_reasons"
+        case creditsUsed = "credits_used"
+    }
+}
+
+/// Result of identity verification.
+public struct IdentityVerificationResult: Codable, Sendable {
+    public let verificationId: String
+    public let status: VerificationStatus
+    public let fullName: String?
+    public let dateOfBirth: String?
+    public let documentType: String?
+    public let countryCode: String?
+    public let liveness: LivenessResult?
+    public let faceMatch: FaceMatchResult?
+    public let creditsUsed: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case verificationId = "verification_id"
+        case status
+        case fullName = "full_name"
+        case dateOfBirth = "date_of_birth"
+        case documentType = "document_type"
+        case countryCode = "country_code"
+        case liveness
+        case faceMatch = "face_match"
+        case creditsUsed = "credits_used"
+    }
+}
+
+/// Result of polling a verification session.
+public struct VerificationSessionResult: Codable, Sendable {
+    public let sessionId: String
+    public let status: VerificationSessionStatus
+    public let result: AnyCodable?
+    public let createdAt: String?
+    public let expiresAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case sessionId = "session_id"
+        case status, result
+        case createdAt = "created_at"
+        case expiresAt = "expires_at"
+    }
+}
+
+/// Result of retrieving an age verification by ID.
+public struct VerificationRetrieveResult: Codable, Sendable {
+    public let verificationId: String
+    public let status: VerificationStatus
+    public let ageBracket: String?
+    public let isMinor: Bool?
+    public let liveness: LivenessResult?
+    public let faceMatch: FaceMatchResult?
+    public let createdAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case verificationId = "verification_id"
+        case status
+        case ageBracket = "age_bracket"
+        case isMinor = "is_minor"
+        case liveness
+        case faceMatch = "face_match"
+        case createdAt = "created_at"
+    }
+}
+
+/// Result of retrieving an identity verification by ID.
+public struct IdentityRetrieveResult: Codable, Sendable {
+    public let verificationId: String
+    public let status: VerificationStatus
+    public let fullName: String?
+    public let dateOfBirth: String?
+    public let documentType: String?
+    public let countryCode: String?
+    public let liveness: LivenessResult?
+    public let faceMatch: FaceMatchResult?
+    public let createdAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case verificationId = "verification_id"
+        case status
+        case fullName = "full_name"
+        case dateOfBirth = "date_of_birth"
+        case documentType = "document_type"
+        case countryCode = "country_code"
+        case liveness
+        case faceMatch = "face_match"
+        case createdAt = "created_at"
+    }
+}
+
+/// Result of cancelling a verification session.
+public struct CancelVerificationSessionResult: Codable, Sendable {
+    public let message: String
+}
+
 // MARK: - AnyCodable Helper
 
 /// A type-erased `Codable` value for handling dynamic JSON fields.

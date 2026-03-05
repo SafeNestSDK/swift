@@ -174,3 +174,9 @@ struct BatchItemData: Encodable {
         case text, messages, context
     }
 }
+
+/// Verification session creation request body.
+struct CreateVerificationSessionRequest: Encodable {
+    let mode: String
+    var documentType: String?
+}

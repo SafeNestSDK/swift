@@ -817,4 +817,169 @@ final class TuteliqTests: XCTestCase {
             }
         }
     #endif
+
+    // MARK: - Verification
+
+    func testVerificationModeEnum() {
+        XCTAssertEqual(VerificationMode.age.rawValue, "age")
+        XCTAssertEqual(VerificationMode.identity.rawValue, "identity")
+    }
+
+    func testDocumentTypeEnum() {
+        XCTAssertEqual(DocumentType.passport.rawValue, "passport")
+        XCTAssertEqual(DocumentType.idCard.rawValue, "id_card")
+        XCTAssertEqual(DocumentType.driversLicense.rawValue, "drivers_license")
+    }
+
+    func testVerificationStatusEnum() {
+        XCTAssertEqual(VerificationStatus.verified.rawValue, "verified")
+        XCTAssertEqual(VerificationStatus.failed.rawValue, "failed")
+        XCTAssertEqual(VerificationStatus.needsReview.rawValue, "needs_review")
+    }
+
+    func testVerificationSessionStatusEnum() {
+        XCTAssertEqual(VerificationSessionStatus.pending.rawValue, "pending")
+        XCTAssertEqual(VerificationSessionStatus.inProgress.rawValue, "in_progress")
+        XCTAssertEqual(VerificationSessionStatus.completed.rawValue, "completed")
+        XCTAssertEqual(VerificationSessionStatus.failed.rawValue, "failed")
+        XCTAssertEqual(VerificationSessionStatus.expired.rawValue, "expired")
+        XCTAssertEqual(VerificationSessionStatus.cancelled.rawValue, "cancelled")
+    }
+
+    func testCreateVerificationSessionInput() {
+        let input = CreateVerificationSessionInput(mode: .age, documentType: .passport)
+        XCTAssertEqual(input.mode, .age)
+        XCTAssertEqual(input.documentType, .passport)
+    }
+
+    func testVerificationSessionDecoding() throws {
+        let json: [String: Any] = [
+            "session_id": "vs_abc123",
+            "mobile_url": "https://verify.tuteliq.ai/session/vs_abc123",
+            "expires_at": "2026-03-05T12:00:00Z",
+            "mode": "age",
+        ]
+        let data = jsonData(json)
+        let session = try JSONDecoder().decode(VerificationSession.self, from: data)
+
+        XCTAssertEqual(session.sessionId, "vs_abc123")
+        XCTAssertEqual(session.url, "https://verify.tuteliq.ai/session/vs_abc123")
+        XCTAssertEqual(session.mode, .age)
+    }
+
+    func testAgeVerificationResultDecoding() throws {
+        let json: [String: Any] = [
+            "verification_id": "vrf_123",
+            "status": "verified",
+            "age_bracket": "18-25",
+            "is_minor": false,
+            "credits_used": 10,
+            "liveness": ["valid": true],
+            "face_match": ["matched": true, "confidence": 0.95, "distance": 0.12],
+        ]
+        let data = jsonData(json)
+        let result = try JSONDecoder().decode(AgeVerificationResult.self, from: data)
+
+        XCTAssertEqual(result.verificationId, "vrf_123")
+        XCTAssertEqual(result.status, .verified)
+        XCTAssertEqual(result.ageBracket, "18-25")
+        XCTAssertEqual(result.isMinor, false)
+        XCTAssertEqual(result.creditsUsed, 10)
+        XCTAssertEqual(result.liveness?.valid, true)
+        XCTAssertEqual(result.faceMatch?.matched, true)
+        XCTAssertEqual(result.faceMatch?.confidence, 0.95)
+    }
+
+    func testIdentityVerificationResultDecoding() throws {
+        let json: [String: Any] = [
+            "verification_id": "vrf_456",
+            "status": "verified",
+            "full_name": "John Doe",
+            "date_of_birth": "1990-01-15",
+            "document_type": "passport",
+            "country_code": "US",
+            "credits_used": 15,
+        ]
+        let data = jsonData(json)
+        let result = try JSONDecoder().decode(IdentityVerificationResult.self, from: data)
+
+        XCTAssertEqual(result.verificationId, "vrf_456")
+        XCTAssertEqual(result.status, .verified)
+        XCTAssertEqual(result.fullName, "John Doe")
+        XCTAssertEqual(result.dateOfBirth, "1990-01-15")
+        XCTAssertEqual(result.countryCode, "US")
+    }
+
+    func testVerificationSessionResultDecoding() throws {
+        let json: [String: Any] = [
+            "session_id": "vs_abc123",
+            "status": "completed",
+            "created_at": "2026-03-05T10:00:00Z",
+            "expires_at": "2026-03-05T12:00:00Z",
+        ]
+        let data = jsonData(json)
+        let result = try JSONDecoder().decode(VerificationSessionResult.self, from: data)
+
+        XCTAssertEqual(result.sessionId, "vs_abc123")
+        XCTAssertEqual(result.status, .completed)
+    }
+
+    func testSuccessfulCreateVerificationSession() async throws {
+        var capturedRequest: URLRequest?
+        let client = try makeClient { request in
+            capturedRequest = request
+            return self.mockResponse(json: [
+                "session_id": "vs_test123",
+                "mobile_url": "https://verify.tuteliq.ai/session/vs_test123",
+                "expires_at": "2026-03-05T12:00:00Z",
+                "mode": "age",
+            ])
+        }
+
+        let input = CreateVerificationSessionInput(mode: .age, documentType: .passport)
+        let session = try await client.createVerificationSession(input)
+
+        XCTAssertEqual(session.sessionId, "vs_test123")
+        XCTAssertEqual(session.url, "https://verify.tuteliq.ai/session/vs_test123")
+        XCTAssertEqual(session.mode, .age)
+        XCTAssertEqual(capturedRequest?.httpMethod, "POST")
+        XCTAssertTrue(capturedRequest?.url?.path.contains("/api/v1/verify/session") ?? false)
+    }
+
+    func testSuccessfulGetVerificationSession() async throws {
+        var capturedRequest: URLRequest?
+        let client = try makeClient { request in
+            capturedRequest = request
+            return self.mockResponse(json: [
+                "session_id": "vs_test123",
+                "status": "pending",
+                "created_at": "2026-03-05T10:00:00Z",
+                "expires_at": "2026-03-05T12:00:00Z",
+            ])
+        }
+
+        let result = try await client.getVerificationSession(id: "vs_test123")
+
+        XCTAssertEqual(result.sessionId, "vs_test123")
+        XCTAssertEqual(result.status, .pending)
+        XCTAssertEqual(capturedRequest?.httpMethod, "GET")
+        XCTAssertTrue(capturedRequest?.url?.path.contains("/api/v1/verify/session/vs_test123") ?? false)
+    }
+
+    func testSuccessfulGetAgeVerification() async throws {
+        let client = try makeClient { _ in
+            self.mockResponse(json: [
+                "verification_id": "vrf_123",
+                "status": "verified",
+                "age_bracket": "18-25",
+                "is_minor": false,
+                "created_at": "2026-03-05T10:00:00Z",
+            ])
+        }
+
+        let result = try await client.getAgeVerification(id: "vrf_123")
+
+        XCTAssertEqual(result.verificationId, "vrf_123")
+        XCTAssertEqual(result.status, .verified)
+    }
 }

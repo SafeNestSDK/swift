@@ -696,6 +696,58 @@ public final class Tuteliq: @unchecked Sendable {
         return try await multipartRequest(path: "/api/v1/safety/video", body: body, boundary: boundary)
     }
 
+    // MARK: - Verification
+
+    /// Create a verification session.
+    ///
+    /// ```swift
+    /// let input = CreateVerificationSessionInput(mode: .age, documentType: .passport)
+    /// let session = try await tuteliq.createVerificationSession(input)
+    /// print("Open URL:", session.url)
+    /// ```
+    ///
+    /// - Parameter input: Session configuration with mode and optional document type.
+    /// - Returns: A `VerificationSession` with URL to redirect user.
+    public func createVerificationSession(_ input: CreateVerificationSessionInput) async throws -> VerificationSession {
+        var body = CreateVerificationSessionRequest(mode: input.mode.rawValue)
+        body.documentType = input.documentType?.rawValue
+        return try await request(method: "POST", path: "/api/v1/verify/session", body: body)
+    }
+
+    /// Get the current status of a verification session.
+    ///
+    /// Poll this endpoint after creating a session to check completion.
+    ///
+    /// - Parameter id: The session ID from `createVerificationSession`.
+    /// - Returns: A `VerificationSessionResult` with current status.
+    public func getVerificationSession(id: String) async throws -> VerificationSessionResult {
+        return try await request(method: "GET", path: "/api/v1/verify/session/\(id)")
+    }
+
+    /// Cancel a verification session.
+    ///
+    /// - Parameter id: The session ID to cancel.
+    /// - Returns: A `CancelVerificationSessionResult` with confirmation message.
+    public func cancelVerificationSession(id: String) async throws -> CancelVerificationSessionResult {
+        return try await request(method: "DELETE", path: "/api/v1/verify/session/\(id)")
+    }
+
+    /// Retrieve a past age verification result.
+    ///
+    /// - Parameter id: The verification ID.
+    /// - Returns: A `VerificationRetrieveResult` with verification details.
+    public func getAgeVerification(id: String) async throws -> VerificationRetrieveResult {
+        return try await request(method: "GET", path: "/api/v1/verify/age/\(id)")
+    }
+
+    /// Retrieve a past identity verification result.
+    ///
+    /// - Parameter id: The verification ID.
+    /// - Returns: An `IdentityRetrieveResult` with verification details.
+    public func getIdentityVerification(id: String) async throws -> IdentityRetrieveResult {
+        return try await request(method: "GET", path: "/api/v1/verify/identity/\(id)")
+    }
+
     // MARK: - Voice Streaming
 
     /// Create a voice streaming session over WebSocket.

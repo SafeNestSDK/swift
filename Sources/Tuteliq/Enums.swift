@@ -137,3 +137,33 @@ public enum Tier: String, Codable, Sendable {
     case business
     case enterprise
 }
+
+/// Verification mode for age/identity verification.
+public enum VerificationMode: String, Codable, Sendable {
+    case age
+    case identity
+}
+
+/// Document types accepted for verification.
+public enum DocumentType: String, Codable, Sendable {
+    case passport
+    case idCard = "id_card"
+    case driversLicense = "drivers_license"
+}
+
+/// Verification result status.
+public enum VerificationStatus: String, Codable, Sendable {
+    case verified
+    case failed
+    case needsReview = "needs_review"
+}
+
+/// Verification session status.
+public enum VerificationSessionStatus: String, Codable, Sendable {
+    case pending
+    case inProgress = "in_progress"
+    case completed
+    case failed
+    case expired
+    case cancelled
+}
