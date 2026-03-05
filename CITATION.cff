@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+title: Tuteliq Swift SDK
+message: "If you use this software, please cite it using this metadata."
+type: software
+authors:
+  - name: Tuteliq
+    website: https://tuteliq.ai
+repository-code: https://github.com/Tuteliq/swift
+url: https://tuteliq.ai
+abstract: >-
+  Official Swift SDK for Tuteliq — AI-powered child safety API for iOS, macOS, tvOS, and watchOS
+keywords:
+  - child safety
+  - Swift
+  - iOS
+  - macOS
+  - content moderation
+  - KOSA
+  - SDK
+  - Swift Package Manager
+  - age verification
+  - identity verification
+  - online safety
+license: MIT

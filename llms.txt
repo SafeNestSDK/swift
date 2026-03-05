@@ -1,0 +1,30 @@
+# Tuteliq Swift SDK
+
+> Official Swift SDK for Tuteliq — AI-powered child safety API for iOS, macOS, tvOS, and watchOS.
+
+## What is this?
+A Swift package for the Tuteliq child safety API. Detect bullying, grooming, self-harm, substance promotion, and other harmful content. Works with iOS 15+, macOS 12+, tvOS 15+, and watchOS 8+.
+
+## Install
+// Package.swift
+.package(url: "https://github.com/tuteliq/tuteliq-swift.git", from: "1.0.0")
+
+## Quick Start
+import Tuteliq
+let client = Tuteliq(apiKey: ProcessInfo.processInfo.environment["TUTELIQ_API_KEY"]!)
+let result = try await client.detectUnsafe(text: "content to check", ageGroup: "13-15")
+
+## Key Features
+- Swift concurrency (async/await)
+- All Apple platforms (iOS, macOS, tvOS, watchOS)
+- All 20+ Tuteliq API endpoints
+- 16+ detection categories (KOSA compliant)
+- Age group calibration
+- Age verification (Beta) — POST /v1/verification/age — 5 credits, Pro tier+
+- Identity verification (Beta) — POST /v1/verification/identity — 10 credits, Business tier+
+- Swift Package Manager
+
+## Links
+- Website: https://tuteliq.ai
+- Documentation: https://docs.tuteliq.ai
+- GitHub: https://github.com/Tuteliq/swift
