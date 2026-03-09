@@ -16,6 +16,9 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_15.2.app
 
+      - name: Audit dependencies
+        run: swift package audit || true
+
       - name: Build
         run: swift build -v
 
