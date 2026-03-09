@@ -24,6 +24,9 @@ let result = try await client.detectUnsafe(text: "content to check", ageGroup: "
 - Identity verification (Beta) — POST /v1/verification/identity — 10 credits, Business tier+
 - Swift Package Manager
 
+## Supported Languages
+27 languages: English (stable), Spanish, Portuguese, Ukrainian, Swedish, Norwegian, Danish, Finnish, German, French, Dutch, Polish, Italian, Turkish, Romanian, Greek, Czech, Hungarian, Bulgarian, Croatian, Slovak, Lithuanian, Latvian, Estonian, Slovenian, Maltese, Irish (beta). Auto-detected, no configuration needed.
+
 ## Links
 - Website: https://tuteliq.ai
 - Documentation: https://docs.tuteliq.ai
