@@ -129,6 +129,18 @@ public enum Detection: String, Codable, Sendable {
     case radicalisation
 }
 
+/// Detection endpoint identifiers for document analysis.
+public enum DocumentEndpointName: String, Codable, Sendable {
+    case unsafe
+    case bullying
+    case grooming
+    case socialEngineering = "social-engineering"
+    case coerciveControl = "coercive-control"
+    case radicalisation
+    case romanceScam = "romance-scam"
+    case muleRecruitment = "mule-recruitment"
+}
+
 /// Subscription tier levels.
 public enum Tier: String, Codable, Sendable {
     case starter

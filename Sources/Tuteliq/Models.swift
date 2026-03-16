@@ -1213,6 +1213,251 @@ public struct CancelVerificationSessionResult: Codable, Sendable {
     public let message: String
 }
 
+// MARK: - Document Analysis
+
+/// Input for document (PDF) analysis.
+///
+/// Provide PDF file data and optional detection endpoints. The SDK handles
+/// multipart encoding and MIME type detection from the filename extension.
+///
+/// ```swift
+/// let pdfData = try Data(contentsOf: pdfURL)
+/// let input = AnalyzeDocumentInput(file: pdfData, filename: "report.pdf")
+/// let result = try await tuteliq.analyzeDocument(input)
+/// ```
+public struct AnalyzeDocumentInput: Sendable {
+    /// Raw PDF file data.
+    public var file: Data
+    /// Filename with extension (used for MIME type detection).
+    public var filename: String
+    /// Detection endpoints to run on each page. Defaults to `["unsafe", "coercive-control", "radicalisation"]`.
+    public var endpoints: [DocumentEndpointName]?
+    /// Customer-provided file reference echoed in the response.
+    public var fileId: String?
+    /// Age group range (e.g., `"11-13"`).
+    public var ageGroup: String?
+    /// Language hint (ISO 639-1).
+    public var language: String?
+    /// Platform where the content originated.
+    public var platform: String?
+    /// Minimum severity to include crisis helplines. Default: `"high"`.
+    public var supportThreshold: String?
+    /// Your external correlation ID (max 255 chars).
+    public var externalId: String?
+    /// Multi-tenant customer ID for webhook routing (max 255 chars).
+    public var customerId: String?
+    /// Arbitrary key-value metadata as a JSON string map.
+    public var metadata: [String: String]?
+
+    public init(
+        file: Data,
+        filename: String,
+        endpoints: [DocumentEndpointName]? = nil,
+        fileId: String? = nil,
+        ageGroup: String? = nil,
+        language: String? = nil,
+        platform: String? = nil,
+        supportThreshold: String? = nil,
+        externalId: String? = nil,
+        customerId: String? = nil,
+        metadata: [String: String]? = nil
+    ) {
+        self.file = file
+        self.filename = filename
+        self.endpoints = endpoints
+        self.fileId = fileId
+        self.ageGroup = ageGroup
+        self.language = language
+        self.platform = platform
+        self.supportThreshold = supportThreshold
+        self.externalId = externalId
+        self.customerId = customerId
+        self.metadata = metadata
+    }
+}
+
+/// Breakdown of text extraction results across document pages.
+public struct DocumentExtractionSummary: Codable, Sendable {
+    /// Pages where text was extracted from the PDF text layer.
+    public let textLayerPages: Int
+    /// Pages where OCR was used.
+    public let ocrPages: Int
+    /// Pages with insufficient text for analysis.
+    public let failedPages: Int
+    /// Average OCR confidence (0.0–1.0) across OCR pages.
+    public let averageOcrConfidence: Double
+
+    enum CodingKeys: String, CodingKey {
+        case textLayerPages = "text_layer_pages"
+        case ocrPages = "ocr_pages"
+        case failedPages = "failed_pages"
+        case averageOcrConfidence = "average_ocr_confidence"
+    }
+}
+
+/// Category detected within a document page endpoint result.
+public struct DocumentCategory: Codable, Sendable {
+    /// Category tag identifier.
+    public let tag: String
+    /// Human-readable label.
+    public let label: String
+    /// Confidence score (0.0–1.0).
+    public let confidence: Double
+}
+
+/// Evidence excerpt from a document page endpoint result.
+public struct DocumentEvidence: Codable, Sendable {
+    /// Relevant text excerpt.
+    public let text: String
+    /// Detected tactic or pattern.
+    public let tactic: String
+    /// Evidence weight (0.0–1.0).
+    public let weight: Double
+}
+
+/// Detection result for a single endpoint on a single document page.
+public struct DocumentPageEndpointResult: Codable, Sendable {
+    /// Endpoint name.
+    public let endpoint: String
+    /// Whether a threat was detected.
+    public let detected: Bool
+    /// Severity score (0.0–1.0).
+    public let severity: Double
+    /// Confidence score (0.0–1.0).
+    public let confidence: Double
+    /// Risk score (0.0–1.0).
+    public let riskScore: Double
+    /// Risk level.
+    public let level: String
+    /// Detected categories.
+    public let categories: [DocumentCategory]
+    /// Evidence excerpts.
+    public let evidence: [DocumentEvidence]
+    /// Recommended action.
+    public let recommendedAction: String
+    /// Human-readable rationale.
+    public let rationale: String
+    /// Detected language.
+    public let detectedLanguage: String?
+
+    enum CodingKeys: String, CodingKey {
+        case endpoint, detected, severity, confidence
+        case riskScore = "risk_score"
+        case level, categories, evidence
+        case recommendedAction = "recommended_action"
+        case rationale
+        case detectedLanguage = "detected_language"
+    }
+}
+
+/// Detection results for a single document page.
+public struct DocumentPageResult: Codable, Sendable {
+    /// Page number (1-indexed).
+    public let pageNumber: Int
+    /// First 200 characters of page text.
+    public let textPreview: String
+    /// How text was extracted (`"text_layer"` or `"ocr"`).
+    public let extractionMethod: String
+    /// OCR confidence if applicable.
+    public let ocrConfidence: Double?
+    /// Detection results per endpoint.
+    public let results: [DocumentPageEndpointResult]
+    /// Highest risk score on this page.
+    public let pageRiskScore: Double
+    /// Page severity level.
+    public let pageSeverity: String
+
+    enum CodingKeys: String, CodingKey {
+        case pageNumber = "page_number"
+        case textPreview = "text_preview"
+        case extractionMethod = "extraction_method"
+        case ocrConfidence = "ocr_confidence"
+        case results
+        case pageRiskScore = "page_risk_score"
+        case pageSeverity = "page_severity"
+    }
+}
+
+/// A flagged page with elevated risk.
+public struct DocumentFlaggedPage: Codable, Sendable {
+    /// Page number.
+    public let pageNumber: Int
+    /// Risk score.
+    public let riskScore: Double
+    /// Severity level.
+    public let severity: String
+    /// Endpoints that detected threats on this page.
+    public let detectedEndpoints: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case pageNumber = "page_number"
+        case riskScore = "risk_score"
+        case severity
+        case detectedEndpoints = "detected_endpoints"
+    }
+}
+
+/// Result from document (PDF) analysis.
+public struct DocumentAnalysisResult: Codable, Sendable {
+    /// Customer-provided file reference (if provided).
+    public let fileId: String?
+    /// SHA-256 hash of the uploaded PDF for chain-of-custody verification.
+    public let documentHash: String
+    /// Total pages in the document.
+    public let totalPages: Int
+    /// Pages with extractable text that were analyzed.
+    public let pagesAnalyzed: Int
+    /// Breakdown of text extraction results.
+    public let extractionSummary: DocumentExtractionSummary
+    /// Per-page detection results.
+    public let pageResults: [DocumentPageResult]
+    /// Highest risk score across all pages (0.0–1.0).
+    public let overallRiskScore: Double
+    /// Overall severity level.
+    public let overallSeverity: String
+    /// Unique list of endpoints that detected threats.
+    public let detectedEndpoints: [String]
+    /// Pages with risk score >= 0.3.
+    public let flaggedPages: [DocumentFlaggedPage]
+    /// Dynamic credit cost based on pages analyzed and endpoints used.
+    public let creditsUsed: Int
+    /// Processing time in milliseconds.
+    public let processingTimeMs: Int
+    /// Detected language.
+    public let language: String?
+    /// Language support status.
+    public let languageStatus: String?
+    /// Crisis support resources (if triggered).
+    public let support: [String: AnyCodable]?
+    /// Echoed external correlation ID.
+    public let externalId: String?
+    /// Echoed customer ID.
+    public let customerId: String?
+    /// Echoed metadata.
+    public let metadata: [String: AnyCodable]?
+
+    enum CodingKeys: String, CodingKey {
+        case fileId = "file_id"
+        case documentHash = "document_hash"
+        case totalPages = "total_pages"
+        case pagesAnalyzed = "pages_analyzed"
+        case extractionSummary = "extraction_summary"
+        case pageResults = "page_results"
+        case overallRiskScore = "overall_risk_score"
+        case overallSeverity = "overall_severity"
+        case detectedEndpoints = "detected_endpoints"
+        case flaggedPages = "flagged_pages"
+        case creditsUsed = "credits_used"
+        case processingTimeMs = "processing_time_ms"
+        case language
+        case languageStatus = "language_status"
+        case support
+        case externalId = "external_id"
+        case customerId = "customer_id"
+        case metadata
+    }
+}
+
 // MARK: - AnyCodable Helper
 
 /// A type-erased `Codable` value for handling dynamic JSON fields.

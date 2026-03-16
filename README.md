@@ -33,7 +33,7 @@ Add Tuteliq to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/Tuteliq/swift.git", from: "1.0.0")
+    .package(url: "https://github.com/Tuteliq/swift.git", from: "1.1.0")
 ]
 ```
 
@@ -186,6 +186,44 @@ print("Severity: \(result.overallSeverity)")
 
 Supported image formats: png, jpg, jpeg, gif, webp (max 10MB).
 
+### Document Analysis
+
+Analyze PDF documents page-by-page with configurable detection endpoints:
+
+```swift
+let pdfData = try Data(contentsOf: pdfURL)
+let result = try await tuteliq.analyzeDocument(
+    AnalyzeDocumentInput(
+        file: pdfData,
+        filename: "report.pdf",
+        endpoints: [.unsafe, .coerciveControl, .radicalisation]
+    )
+)
+
+print("Total pages: \(result.totalPages)")
+print("Pages analyzed: \(result.pagesAnalyzed)")
+print("Overall risk: \(result.overallSeverity)")
+print("Overall score: \(result.overallRiskScore)")
+print("Flagged pages: \(result.flaggedPages.count)")
+print("Credits used: \(result.creditsUsed)")
+
+// Iterate page results
+for page in result.pageResults {
+    print("Page \(page.pageNumber): \(page.pageSeverity) (score: \(page.pageRiskScore))")
+    for endpoint in page.results where endpoint.detected {
+        print("  - \(endpoint.endpoint): \(endpoint.rationale)")
+    }
+}
+
+// Extraction summary
+let summary = result.extractionSummary
+print("Text layer pages: \(summary.textLayerPages)")
+print("OCR pages: \(summary.ocrPages)")
+print("Avg OCR confidence: \(summary.averageOcrConfidence)")
+```
+
+Supported format: PDF (max 50MB). Each page is analyzed independently with text extraction via native text layer or OCR fallback.
+
 ### Quick Analysis
 
 Runs bullying and unsafe detection in parallel:
@@ -329,6 +367,7 @@ print("Credits used: \(result.creditsUsed ?? 0)")  // 1
 | `generateReport()` | 3 | Structured output |
 | `analyzeVoice()` | 5 | Transcription + analysis |
 | `analyzeImage()` | 3 | Vision + OCR + analysis |
+| `analyzeDocument()` | Dynamic | `max(3, pages × endpoints)` |
 | `verifyAge()` | 5 | Age verification (Beta, Pro+) |
 | `verifyIdentity()` | 10 | Identity verification (Beta, Business+) |
 

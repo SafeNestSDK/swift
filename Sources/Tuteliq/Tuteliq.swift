@@ -696,6 +696,63 @@ public final class Tuteliq: @unchecked Sendable {
         return try await multipartRequest(path: "/api/v1/safety/video", body: body, boundary: boundary)
     }
 
+    // MARK: - Document Analysis
+
+    /// Analyze a PDF document for safety concerns.
+    ///
+    /// Extracts text from each page (via text layer or OCR) and runs the specified
+    /// detection endpoints on every page. Supported format: PDF (max 50MB).
+    ///
+    /// ```swift
+    /// let pdfData = try Data(contentsOf: pdfURL)
+    /// let input = AnalyzeDocumentInput(
+    ///     file: pdfData,
+    ///     filename: "report.pdf",
+    ///     endpoints: [.unsafe, .coerciveControl, .radicalisation]
+    /// )
+    /// let result = try await tuteliq.analyzeDocument(input)
+    /// print("Risk: \(result.overallSeverity)")
+    /// print("Flagged pages: \(result.flaggedPages.count)")
+    /// print("Credits: \(result.creditsUsed)")
+    /// ```
+    ///
+    /// - Parameter input: Document analysis input with PDF file data.
+    /// - Returns: Per-page detection results with overall risk assessment.
+    /// - Throws: ``TuteliqError`` on failure. Requires Indie tier or higher.
+    public func analyzeDocument(_ input: AnalyzeDocumentInput) async throws -> DocumentAnalysisResult {
+        let boundary = "Boundary-\(UUID().uuidString)"
+        var body = Data()
+
+        let mimeType = Self.mimeType(for: input.filename) ?? "application/octet-stream"
+        body.appendMultipart(boundary: boundary, name: "file", filename: input.filename, mimeType: mimeType, data: input.file)
+
+        if let endpoints = input.endpoints {
+            let endpointStrings = endpoints.map(\.rawValue)
+            if let jsonData = try? JSONSerialization.data(withJSONObject: endpointStrings),
+               let jsonString = String(data: jsonData, encoding: .utf8)
+            {
+                body.appendMultipartField(boundary: boundary, name: "endpoints", value: jsonString)
+            }
+        }
+        if let v = input.fileId { body.appendMultipartField(boundary: boundary, name: "file_id", value: v) }
+        if let v = input.externalId { body.appendMultipartField(boundary: boundary, name: "external_id", value: v) }
+        if let v = input.customerId { body.appendMultipartField(boundary: boundary, name: "customer_id", value: v) }
+        if let v = input.ageGroup { body.appendMultipartField(boundary: boundary, name: "age_group", value: v) }
+        if let v = input.language { body.appendMultipartField(boundary: boundary, name: "language", value: v) }
+        body.appendMultipartField(boundary: boundary, name: "platform", value: Self.resolvePlatform(input.platform))
+        if let v = input.supportThreshold { body.appendMultipartField(boundary: boundary, name: "support_threshold", value: v) }
+        if let metadata = input.metadata,
+           let jsonData = try? JSONSerialization.data(withJSONObject: metadata),
+           let jsonString = String(data: jsonData, encoding: .utf8)
+        {
+            body.appendMultipartField(boundary: boundary, name: "metadata", value: jsonString)
+        }
+
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+
+        return try await multipartRequest(path: "/api/v1/safety/document", body: body, boundary: boundary)
+    }
+
     // MARK: - Verification
 
     /// Create a verification session.
@@ -1411,6 +1468,7 @@ public final class Tuteliq: @unchecked Sendable {
         case "jpg", "jpeg": return "image/jpeg"
         case "gif": return "image/gif"
         case "webp": return "image/webp"
+        case "pdf": return "application/pdf"
         case "mov": return "video/quicktime"
         case "avi": return "video/x-msvideo"
         default: return nil

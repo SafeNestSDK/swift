@@ -7,7 +7,7 @@ A Swift package for the Tuteliq child safety API. Detect bullying, grooming, sel
 
 ## Install
 // Package.swift
-.package(url: "https://github.com/tuteliq/tuteliq-swift.git", from: "1.0.0")
+.package(url: "https://github.com/tuteliq/tuteliq-swift.git", from: "1.1.0")
 
 ## Quick Start
 import Tuteliq
@@ -20,6 +20,7 @@ let result = try await client.detectUnsafe(text: "content to check", ageGroup: "
 - All 20+ Tuteliq API endpoints
 - 16+ detection categories (KOSA compliant)
 - Age group calibration
+- Document (PDF) analysis — POST /api/v1/safety/document — dynamic credits, Indie tier+
 - Age verification (Beta) — POST /v1/verification/age — 5 credits, Pro tier+
 - Identity verification (Beta) — POST /v1/verification/identity — 10 credits, Business tier+
 - Swift Package Manager
