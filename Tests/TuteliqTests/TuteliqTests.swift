@@ -805,6 +805,7 @@ final class TuteliqTests: XCTestCase {
             let client = try Tuteliq.withStoredAPIKey(service: service)
             XCTAssertNotNil(client)
         }
+
         func testConfigureFromBundleKeyThrowsWhenMissing() {
             XCTAssertThrowsError(
                 try Tuteliq.configure(fromBundleKey: "NonExistentKey_\(UUID().uuidString)")
