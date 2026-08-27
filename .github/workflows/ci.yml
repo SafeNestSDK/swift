@@ -16,8 +16,12 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_15.2.app
 
-      - name: Audit dependencies
-        run: swift package audit || true
+      # 'swift package audit' is not a real SwiftPM subcommand -- this step
+      # previously always "passed" via `|| true` while actually erroring
+      # ("Unknown subcommand or plugin name 'audit'") every run, silently.
+      # Removed rather than left as false assurance. No replacement SCA step
+      # needed: Package.swift declares zero external dependencies
+      # (dependencies: []), so there is nothing to scan.
 
       - name: Build
         run: swift build -v
